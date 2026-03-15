@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { StatusDonasi } from "@/generated/prisma/client";
+import { StatusDonasi, StatusKuota } from "@/generated/prisma/client";
 import { prosesDonasiPaid } from "@/lib/orders";
 
 export async function POST(req: NextRequest) {
@@ -32,26 +32,41 @@ export async function POST(req: NextRequest) {
 
     const totalHarga = jumlahPorsi * kuota.hargaPerPorsi;
 
-    // --- 1. Buat record Donasi ---
+    // --- 1. Buat record Donasi & Tambah Kuota Harian ---
     // Karena MODE BYPASS (Demo), kita langsung anggap PAID agar flow langsung berlanjut
-    const donasi = await prisma.donasi.create({
-      data: {
-        donaturId,
-        kuotaHarianId,
-        jumlahPorsi,
-        totalHarga,
-        status: StatusDonasi.PAID, // Langsung PAID
-        mayarPaymentId: "mock-" + Date.now(),
-        mayarPaymentUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/donasi/mock`,
-      },
-    });
+    const [donasi, updatedKuota] = await prisma.$transaction([
+      prisma.donasi.create({
+        data: {
+          donaturId,
+          kuotaHarianId,
+          jumlahPorsi,
+          totalHarga,
+          status: StatusDonasi.PAID, // Langsung PAID
+          mayarPaymentId: "mock-" + Date.now(),
+          mayarPaymentUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/donasi/mock`,
+        },
+      }),
+      prisma.kuotaHarian.update({
+        where: { id: kuotaHarianId },
+        data: { kuotaTerpenuhi: { increment: jumlahPorsi } },
+      }),
+    ]);
 
-    // --- 2. BYPASS: Langsung trigger alur pencarian UMKM (asumsikan Webhook Mayar sukses)
+    // Jika kuota sudah penuh, tutup statusnya
+    if (updatedKuota.kuotaTerpenuhi >= updatedKuota.kuotaTotal) {
+      await prisma.kuotaHarian.update({
+        where: { id: kuotaHarianId },
+        data: { status: StatusKuota.FULL },
+      });
+    }
+
+    // --- 2. BYPASS: Langsung trigger alur pencarian UMKM ---
     try {
       await prosesDonasiPaid(donasi.id);
       console.log(`[MOCK BYPASS] Pesanan dari donasi ${donasi.id} berhasil di-route ke UMKM`);
     } catch (routeError) {
       console.error("[MOCK BYPASS] Gagal routing pesanan:", routeError);
+      // Biarkan error routing tidak membatalkan kembalian response, karena donasi sudah PAID
     }
 
     // --- 3. URL Redirect Dummy ---

@@ -1,11 +1,10 @@
 import { prisma } from "./prisma";
-import { StatusKuota, StatusPesanan } from "../generated/prisma/client";
+import { StatusPesanan } from "../generated/prisma/client";
 import { findNearestUMKM } from "./routing";
 
 /**
  * Membuat Pesanan baru ke UMKM secara atomik.
- * Mengurangi sisaKapasitas UMKM & menaikkan kuotaTerpenuhi Masjid
- * dalam satu database transaction agar tidak ada race condition.
+ * Mengurangi sisaKapasitas UMKM dalam satu database transaction agar tidak ada race condition.
  */
 export async function createPesanan(
   kuotaHarianId: string,
@@ -35,22 +34,7 @@ export async function createPesanan(
       data: { sisaKapasitas: { decrement: jumlahPorsi } },
     });
 
-    // 3. Naikkan kuotaTerpenuhi masjid
-    const kuotaHarian = await tx.kuotaHarian.update({
-      where: { id: kuotaHarianId },
-      data: { kuotaTerpenuhi: { increment: jumlahPorsi } },
-      select: { kuotaTotal: true, kuotaTerpenuhi: true, masjidProfileId: true },
-    });
-
-    // 4. Jika kuota sudah terpenuhi → ubah status jadi FULL
-    if (kuotaHarian.kuotaTerpenuhi >= kuotaHarian.kuotaTotal) {
-      await tx.kuotaHarian.update({
-        where: { id: kuotaHarianId },
-        data: { status: StatusKuota.FULL },
-      });
-    }
-
-    // 5. Buat record Pesanan baru
+    // 3. Buat record Pesanan baru (logic kenaikan kuota masjid sudah dipindah ke checkout)
     const pesanan = await tx.pesanan.create({
       data: {
         kuotaHarianId,
