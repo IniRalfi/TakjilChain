@@ -68,20 +68,32 @@ export async function generateNarasiAI(pesananId: string) {
     console.log("🤖 [Reporting Agent] Narasi Selesai generated!");
 
     // 3. Simpan Narasi
-    const donasiTerkait = await prisma.donasi.findFirst({
-      where: {
-        kuotaHarianId: pesanan.kuotaHarianId,
-        jumlahPorsi: pesanan.jumlahPorsi,
-        status: "PAID",
-      },
-    });
-
-    if (donasiTerkait) {
+    if (pesanan.donasiId) {
       await prisma.donasi.update({
-        where: { id: donasiTerkait.id },
+        where: { id: pesanan.donasiId },
         data: { narasiAI: narasi },
       });
-      console.log(`🤖 [Reporting Agent] Sukses menyimpan narasi ke Donasi ${donasiTerkait.id}.`);
+      console.log(`🤖 [Reporting Agent] Sukses menyimpan narasi ke Donasi ${pesanan.donasiId}.`);
+    } else {
+      // Fallback heuristic jika donasiId kosong (old data)
+      const donasiTerkait = await prisma.donasi.findFirst({
+        where: {
+          kuotaHarianId: pesanan.kuotaHarianId,
+          jumlahPorsi: pesanan.jumlahPorsi,
+          status: "PAID",
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (donasiTerkait) {
+        await prisma.donasi.update({
+          where: { id: donasiTerkait.id },
+          data: { narasiAI: narasi },
+        });
+        console.log(
+          `🤖 [Reporting Agent] Sukses menyimpan narasi ke Donasi ${donasiTerkait.id} (Heuristic).`,
+        );
+      }
     }
 
     return narasi;

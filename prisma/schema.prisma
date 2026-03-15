@@ -164,6 +164,7 @@ model Donasi {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  pesanan   Pesanan?
 
   @@map("donasi")
 }
@@ -176,6 +177,9 @@ model Pesanan {
 
   umkmProfileId String
   umkm          UmkmProfile @relation(fields: [umkmProfileId], references: [id])
+
+  donasiId String? @unique
+  donasi   Donasi? @relation(fields: [donasiId], references: [id])
 
   jumlahPorsi Int
   status      StatusPesanan @default(WAITING)

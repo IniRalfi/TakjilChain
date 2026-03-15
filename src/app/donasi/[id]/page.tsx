@@ -1,13 +1,23 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { CheckCircle2, HeartHandshake, Sparkles } from "lucide-react";
+import {
+  CheckCircle2,
+  HeartHandshake,
+  Sparkles,
+  ChefHat,
+  Truck,
+  Building2,
+  Search,
+  Check,
+} from "lucide-react";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default async function DonasiSuccessPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  // Lakukan polling ringan (atau ambil data saat ini)
+  // 1. Ambil data donasi
   const donasi = await prisma.donasi.findUnique({
     where: { id },
     include: {
@@ -17,60 +27,223 @@ export default async function DonasiSuccessPage({ params }: { params: Promise<{ 
 
   if (!donasi) return notFound();
 
-  // Ini case saat donatur ngebuka halamannya langsung, nunggu AI nulis cerita
+  // 2. Cari Pesanan terkait (Gunakan direct relation donasiId)
+  const pesanan = await prisma.pesanan.findFirst({
+    where: { donasiId: donasi.id },
+    include: { umkm: true },
+    orderBy: { createdAt: "desc" },
+  });
+
   const isPaid = donasi.status === "PAID";
   const hasNarasi = !!donasi.narasiAI;
 
+  // Logic Phase Tracker
+  const phases = [
+    {
+      id: "PAYMENT",
+      label: "Donasi Diterima",
+      icon: CheckCircle2,
+      active: isPaid,
+      completed: isPaid,
+      desc: "Dana sudah masuk sistem.",
+    },
+    {
+      id: "ROUTING",
+      label: "Mencari UMKM",
+      icon: Search,
+      active: isPaid && !pesanan,
+      completed: !!pesanan,
+      desc: "AI sedang mencarikan UMKM terdekat.",
+    },
+    {
+      id: "COOKING",
+      label: "Proses Dapur",
+      icon: ChefHat,
+      active: pesanan?.status === "WAITING" || pesanan?.status === "ACCEPTED",
+      completed: pesanan?.status === "DELIVERED" || pesanan?.status === "CONFIRMED",
+      desc: pesanan?.umkm?.namaUsaha || "Menunggu UMKM konfirmasi.",
+    },
+    {
+      id: "DELIVERY",
+      label: "Pengantaran",
+      icon: Truck,
+      active: pesanan?.status === "DELIVERED",
+      completed: pesanan?.status === "CONFIRMED",
+      desc: "Takjil sedang menuju masjid.",
+    },
+    {
+      id: "ARRIVED",
+      label: "Tiba di Masjid",
+      icon: Building2,
+      active: pesanan?.status === "CONFIRMED",
+      completed: pesanan?.status === "CONFIRMED",
+      desc: "Sudah diterima pengurus.",
+    },
+  ];
+
   return (
-    <div className="max-w-2xl mx-auto mt-12 space-y-6">
-      <div className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 text-center">
-        <div className="mx-auto w-max mb-6">
-          {isPaid ? (
-            <div className="bg-emerald-100 p-4 rounded-full text-emerald-main">
-              <CheckCircle2 size={48} />
-            </div>
-          ) : (
-            <div className="bg-amber-100 p-4 rounded-full text-amber-main animate-pulse">
-              <HeartHandshake size={48} />
-            </div>
-          )}
+    <div className="max-w-4xl mx-auto mt-12 mb-20 px-4 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+      {/* 🟢 HERO CARD */}
+      <div className="bg-white p-8 md:p-14 rounded-[3rem] shadow-sm border border-stone-100 text-center relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:scale-110 transition-transform duration-1000">
+          <HeartHandshake size={200} />
         </div>
 
-        <h1 className="text-3xl font-extrabold text-charcoal mb-4">
-          {isPaid ? "Alhamdulillah! Pembayaran Berhasil" : "Menunggu Pembayaran..."}
-        </h1>
-        <p className="text-charcoal-muted text-lg mb-8 max-w-md mx-auto">
-          Terima kasih banyak orang baik. Anda telah menyumbangkan{" "}
-          <strong className="text-emerald-main">{donasi.jumlahPorsi} porsi</strong> takjil untuk{" "}
-          <strong>{donasi.kuotaHarian.masjid.nama}</strong>.
-        </p>
+        <div className="relative z-10">
+          <div className="mx-auto w-max mb-8">
+            {isPaid ? (
+              <div className="bg-amber-500 p-5 rounded-3xl text-white shadow-xl shadow-amber-200">
+                <CheckCircle2 size={48} />
+              </div>
+            ) : (
+              <div className="bg-stone-100 p-5 rounded-3xl text-stone-400 animate-pulse">
+                <HeartHandshake size={48} />
+              </div>
+            )}
+          </div>
 
-        {/* Kotak Impact Report (Hasil Narasi AI) */}
-        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 text-left relative overflow-hidden">
-          <h3 className="text-emerald-main font-bold flex items-center gap-2 mb-3">
-            <Sparkles size={18} /> Impact Report (Real-time)
-          </h3>
+          <h1 className="text-4xl font-black text-stone-900 italic tracking-tight mb-4">
+            {isPaid ? "Alhamdulillah! Berkah Diterima" : "Terima Kasih, Sedang Diproses..."}
+          </h1>
+          <p className="text-stone-500 font-medium text-lg mb-8 max-w-xl mx-auto leading-relaxed italic">
+            "Sedekah Anda sebanyak{" "}
+            <span className="text-amber-600 font-black">{donasi.jumlahPorsi} porsi</span> sedang
+            dalam perjalanan menjadi kebahagiaan bagi jamaah{" "}
+            <span className="text-stone-900 font-bold">{donasi.kuotaHarian.masjid.nama}</span>."
+          </p>
 
-          {hasNarasi ? (
-            <div className="prose prose-sm prose-emerald">
-              <p className="text-charcoal leading-relaxed font-medium italic">
-                "{donasi.narasiAI}"
-              </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <div className="px-6 py-3 bg-stone-50 rounded-2xl border border-stone-100 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-black uppercase text-stone-400 tracking-widest">
+                Live Tracker Aktif
+              </span>
             </div>
-          ) : (
-            <div className="text-sm text-charcoal-muted">
-              {isPaid
-                ? "Sistem Logistik TakjilChain sedang mencarikan UMKM terbaik untuk pesanan Anda. Kami akan mengirimkan kisah/laporan distribusi di halaman ini segera setelah takjil tiba di masjid."
-                : "Selesaikan pembayaran Anda di link Mayar untuk mengaktifkan logistik kami."}
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
-      <div className="text-center">
-        <a href="/" className="text-emerald-main font-medium hover:underline">
-          Kembali ke Beranda
-        </a>
+      {/* 📍 REAL-TIME TRACKER (Timeline style) */}
+      <div className="bg-stone-950 p-8 md:p-12 rounded-[3.5rem] text-white shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 blur-[100px] rounded-full"></div>
+
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-12">
+            <div className="p-3 bg-stone-900 rounded-2xl border border-stone-800">
+              <Truck size={24} className="text-amber-500" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black italic tracking-tight">Perjalanan Takjil Anda</h2>
+              <p className="text-stone-400 text-xs font-bold uppercase tracking-widest">
+                Pantau distribusi secara langsung
+              </p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-5 gap-6 relative">
+            {/* Connector Line (Desktop) */}
+            <div className="hidden md:block absolute top-[26px] left-[10%] right-[10%] h-[2px] bg-stone-800" />
+
+            {phases.map((phase) => (
+              <div
+                key={phase.id}
+                className="relative z-10 flex flex-col items-center text-center group"
+              >
+                {/* Circle Icon */}
+                <div
+                  className={`w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 shadow-lg ${
+                    phase.completed
+                      ? "bg-amber-500 border-amber-400 text-white scale-110"
+                      : phase.active
+                        ? "bg-stone-900 border-amber-500 text-amber-500 animate-pulse"
+                        : "bg-stone-900 border-stone-800 text-stone-600"
+                  }`}
+                >
+                  {phase.completed ? <Check size={28} /> : <phase.icon size={24} />}
+                </div>
+
+                {/* Text */}
+                <div className="mt-6">
+                  <h4
+                    className={`text-sm font-black italic transition-colors ${phase.active || phase.completed ? "text-white" : "text-stone-600"}`}
+                  >
+                    {phase.label}
+                  </h4>
+                  <p
+                    className={`text-[10px] font-bold mt-1 uppercase tracking-tighter leading-tight ${phase.completed ? "text-amber-500/70" : "text-stone-500"}`}
+                  >
+                    {phase.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ✨ IMPACT REPORT BOX */}
+      <div className="bg-gradient-to-br from-amber-50 to-orange-100 border border-amber-200/50 rounded-[3rem] p-8 md:p-12 relative overflow-hidden group">
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+
+        <div className="relative z-10 flex flex-col md:flex-row gap-10 items-start">
+          <div className="flex-1 space-y-4">
+            <h3 className="text-amber-600 font-black text-xs flex items-center gap-2 uppercase tracking-[0.2em] italic">
+              <Sparkles size={18} className="fill-amber-500" />
+              Impact Report by AI Agent
+            </h3>
+
+            {hasNarasi ? (
+              <div className="space-y-4">
+                <p className="text-stone-900 text-2xl font-black leading-tight italic tracking-tighter">
+                  "{donasi.narasiAI}"
+                </p>
+                <div className="pt-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center shadow-sm">
+                    <Sparkles size={16} className="text-amber-500" />
+                  </div>
+                  <p className="text-xs font-bold text-stone-500 leading-tight">
+                    Laporan ini dibuat otomatis oleh{" "}
+                    <span className="text-stone-900 underline decoration-amber-500 decoration-2">
+                      Reporting Agent AI
+                    </span>{" "}
+                    berdasarkan bukti foto dari lapangan.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white/50 backdrop-blur-sm p-6 rounded-3xl border border-amber-200/30">
+                <p className="text-stone-500 font-medium leading-relaxed italic">
+                  {isPaid
+                    ? "Logistik TakjilChain sedang bekerja di balik layar. Begitu takjil tiba di masjid, AI kami akan menuliskan rincian distribusi dan dampaknya khusus untuk Anda di sini."
+                    : "Selesaikan pembayaran untuk mengaktifkan pelaporan real-time."}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="w-full md:w-64 shrink-0 bg-white p-6 rounded-[2.5rem] border border-amber-200 shadow-sm shadow-amber-200/20">
+            <div className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2">
+              Penerima Manfaat
+            </div>
+            <p className="font-black text-stone-900 italic text-lg leading-tight mb-4">
+              {donasi.kuotaHarian.masjid.nama}
+            </p>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="px-3 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-black">
+                {donasi.jumlahPorsi} Porsi
+              </div>
+              <div className="px-3 py-1 bg-stone-100 text-stone-500 rounded-lg text-[10px] font-black">
+                Takjil Buka
+              </div>
+            </div>
+            <Link
+              href="/"
+              className="block w-full text-center py-4 bg-stone-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 transition-all duration-300"
+            >
+              Kembali Beranda
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

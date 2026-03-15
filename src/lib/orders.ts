@@ -10,11 +10,12 @@ export async function createPesanan(
   kuotaHarianId: string,
   umkmId: string,
   jumlahPorsi: number,
+  donasiId?: string,
   attemptKe: number = 1,
   pesananSebelumId?: string,
 ) {
   return await prisma.$transaction(async (tx) => {
-    // 1. Lock & validasi kapasitas UMKM (cegah race condition)
+    // 1. Lock & validasi kapasitas UMKM
     const umkm = await tx.umkmProfile.findUnique({
       where: { id: umkmId },
       select: { sisaKapasitas: true, namaUsaha: true },
@@ -34,11 +35,12 @@ export async function createPesanan(
       data: { sisaKapasitas: { decrement: jumlahPorsi } },
     });
 
-    // 3. Buat record Pesanan baru (logic kenaikan kuota masjid sudah dipindah ke checkout)
+    // 3. Buat record Pesanan baru
     const pesanan = await tx.pesanan.create({
       data: {
         kuotaHarianId,
         umkmProfileId: umkmId,
+        donasiId,
         jumlahPorsi,
         status: StatusPesanan.WAITING,
         attemptKe,
@@ -52,7 +54,6 @@ export async function createPesanan(
 
 /**
  * Entry point utama setelah donasi PAID.
- * Jalankan Smart Routing lalu buat Pesanan.
  */
 export async function prosesDonasiPaid(donasiId: string) {
   const donasi = await prisma.donasi.findUnique({
@@ -77,6 +78,7 @@ export async function prosesDonasiPaid(donasiId: string) {
     donasi.kuotaHarianId,
     umkmTerpilih.umkmId,
     donasi.jumlahPorsi,
+    donasi.id,
   );
 
   console.log(

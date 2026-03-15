@@ -66,6 +66,16 @@ export default function Navbar() {
             >
               Dasbor Masjid
             </Link>
+            <Link
+              href="/donatur/laporan"
+              className={`text-sm font-semibold px-4 py-2 rounded-full transition border ${
+                pathname.startsWith("/donatur/laporan")
+                  ? "bg-amber-500 text-white border-transparent shadow-md shadow-amber-500/20"
+                  : "text-gray-700 border-stone-200 hover:bg-amber-50 hover:text-amber-600"
+              }`}
+            >
+              Laporan Dampak
+            </Link>
             {/* 🛠️ FIX COPYWRITING: "Akses UMKM" diubah jadi "Dasbor UMKM" */}
             <Link
               href="/dashboard/umkm"
@@ -128,6 +138,17 @@ export default function Navbar() {
             }`}
           >
             Dasbor Masjid
+          </Link>
+          <Link
+            href="/donatur/laporan"
+            onClick={() => setIsOpen(false)}
+            className={`text-base font-medium px-4 py-3 rounded-xl text-center border transition-colors ${
+              pathname.startsWith("/donatur/laporan")
+                ? "bg-amber-500 text-white border-transparent shadow-md"
+                : "text-gray-700 border-stone-200 hover:bg-amber-50 hover:text-amber-600"
+            }`}
+          >
+            Laporan Dampak
           </Link>
           <Link
             href="/dashboard/umkm"
