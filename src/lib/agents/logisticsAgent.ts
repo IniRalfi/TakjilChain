@@ -98,6 +98,7 @@ export async function runLogisticsAgent() {
         p.kuotaHarianId,
         umkmBaru.umkmId,
         p.jumlahPorsi,
+        p.donasiId ?? undefined, // Tetap hubungkan ke donasiId asal
         attemptBaru,
         p.id, // ID pesanan lama sebagai referensi
       );
