@@ -1,29 +1,36 @@
 import { prisma } from "@/lib/prisma";
 import DashboardClientWrapper from "./DashboardClientWrapper";
+import { withSafePrisma } from "@/lib/safe-prisma";
+
+export const dynamic = "force-dynamic";
 
 export default async function MasjidDashboard() {
-  // 1. Ambil semua profil masjid
-  const allMasjids = await prisma.masjidProfile.findMany();
+  // Gunakan Safe Prisma Wrapper untuk menghindari error cold start/sync di Next.js
+  const { allMasjids, allPesanan } = await withSafePrisma(async () => {
+    const [masjids, pesanan] = await Promise.all([
+      prisma.masjidProfile.findMany(),
+      prisma.pesanan.findMany({
+        include: {
+          umkm: true,
+          kuotaHarian: {
+            include: { masjid: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
+    return { allMasjids: masjids, allPesanan: pesanan };
+  });
 
-  // 2. Handle kalau data masih kosong
   if (allMasjids.length === 0) {
     return (
-      <div className="p-10 text-center bg-white rounded-3xl border border-dashed">
-        <p className="text-gray-400">Data masjid belum di-seed. Jalankan seeder dulu ya!</p>
+      <div className="p-10 text-center bg-white rounded-3xl border border-dashed border-stone-200">
+        <p className="text-stone-400 font-bold italic uppercase tracking-widest text-xs">
+          Data masjid belum tersedia
+        </p>
       </div>
     );
   }
-
-  // 3. Ambil SEMUA pesanan (Kita filter di Client biar responsif pas ganti masjid)
-  const allPesanan = await prisma.pesanan.findMany({
-    include: {
-      umkm: true,
-      kuotaHarian: {
-        include: { masjid: true },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
 
   return <DashboardClientWrapper allMasjids={allMasjids} allPesanan={allPesanan} />;
 }

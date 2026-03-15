@@ -28,7 +28,10 @@ export default function Navbar() {
                 sizes="56px"
               />
             </div>
-            <h1 className="font-extrabold text-2xl tracking-tight text-emerald-600">TakjilChain</h1>
+            <h1 className="font-extrabold text-2xl tracking-tight">
+              <span className="text-emerald-600">Takjil</span>
+              <span className="text-amber-500">Chain</span>
+            </h1>
           </Link>
 
           {/* Desktop Nav */}
@@ -55,37 +58,38 @@ export default function Navbar() {
               Daftar Masjid
             </a>
             <div className="h-4 w-px bg-gray-300"></div>
-            {/* 🛠️ FIX COPYWRITING: "Akses Pengurus" diubah jadi "Dasbor Masjid" */}
+            {/* 🛠️ Dashboard Links Group (Consistent Amber Theme) */}
             <Link
               href="/dashboard/masjid"
               className={`text-sm font-semibold px-4 py-2 rounded-full transition border ${
                 pathname.startsWith("/dashboard/masjid")
-                  ? "bg-emerald-600 text-white border-transparent shadow-md shadow-emerald-600/20"
-                  : "text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-emerald-600"
+                  ? "bg-amber-500 text-white border-transparent shadow-md shadow-amber-500/20"
+                  : "text-stone-700 border-stone-200 hover:bg-amber-50 hover:text-amber-600 shadow-sm shadow-stone-100"
               }`}
             >
               Dasbor Masjid
             </Link>
+
+            <Link
+              href="/dashboard/umkm"
+              className={`text-sm font-semibold px-4 py-2 rounded-full transition border ${
+                pathname.startsWith("/dashboard/umkm")
+                  ? "bg-amber-500 text-white border-transparent shadow-md shadow-amber-500/20"
+                  : "text-stone-700 border-stone-200 hover:bg-amber-50 hover:text-amber-600 shadow-sm shadow-stone-100"
+              }`}
+            >
+              Dasbor UMKM
+            </Link>
+
             <Link
               href="/donatur/laporan"
               className={`text-sm font-semibold px-4 py-2 rounded-full transition border ${
                 pathname.startsWith("/donatur/laporan")
                   ? "bg-amber-500 text-white border-transparent shadow-md shadow-amber-500/20"
-                  : "text-gray-700 border-stone-200 hover:bg-amber-50 hover:text-amber-600"
+                  : "text-stone-700 border-stone-200 hover:bg-amber-50 hover:text-amber-600 shadow-sm shadow-stone-100"
               }`}
             >
               Laporan Dampak
-            </Link>
-            {/* 🛠️ FIX COPYWRITING: "Akses UMKM" diubah jadi "Dasbor UMKM" */}
-            <Link
-              href="/dashboard/umkm"
-              className={`text-sm font-semibold px-4 py-2 rounded-full transition border ${
-                pathname.startsWith("/dashboard/umkm")
-                  ? "bg-emerald-600 text-white border-transparent shadow-md shadow-emerald-600/20"
-                  : "text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-emerald-600"
-              }`}
-            >
-              Dasbor UMKM
             </Link>
           </div>
 
@@ -133,11 +137,22 @@ export default function Navbar() {
             onClick={() => setIsOpen(false)}
             className={`text-base font-medium px-4 py-3 rounded-xl text-center border transition-colors ${
               pathname.startsWith("/dashboard/masjid")
-                ? "bg-emerald-600 text-white border-transparent shadow-md"
-                : "text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-emerald-600"
+                ? "bg-amber-500 text-white border-transparent shadow-md"
+                : "text-stone-700 border-stone-200 hover:bg-amber-50 hover:text-amber-600 shadow-sm"
             }`}
           >
             Dasbor Masjid
+          </Link>
+          <Link
+            href="/dashboard/umkm"
+            onClick={() => setIsOpen(false)}
+            className={`text-base font-medium px-4 py-3 rounded-xl text-center border transition-colors ${
+              pathname.startsWith("/dashboard/umkm")
+                ? "bg-amber-500 text-white border-transparent shadow-md"
+                : "text-stone-700 border-stone-200 hover:bg-amber-50 hover:text-amber-600 shadow-sm"
+            }`}
+          >
+            Dasbor UMKM
           </Link>
           <Link
             href="/donatur/laporan"
@@ -145,21 +160,10 @@ export default function Navbar() {
             className={`text-base font-medium px-4 py-3 rounded-xl text-center border transition-colors ${
               pathname.startsWith("/donatur/laporan")
                 ? "bg-amber-500 text-white border-transparent shadow-md"
-                : "text-gray-700 border-stone-200 hover:bg-amber-50 hover:text-amber-600"
+                : "text-stone-700 border-stone-200 hover:bg-amber-50 hover:text-amber-600 shadow-sm"
             }`}
           >
             Laporan Dampak
-          </Link>
-          <Link
-            href="/dashboard/umkm"
-            onClick={() => setIsOpen(false)}
-            className={`text-base font-medium px-4 py-3 rounded-xl text-center border transition-colors ${
-              pathname.startsWith("/dashboard/umkm")
-                ? "bg-emerald-600 text-white border-transparent shadow-md"
-                : "text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-emerald-600"
-            }`}
-          >
-            Dasbor UMKM
           </Link>
         </div>
       )}

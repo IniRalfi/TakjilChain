@@ -1,29 +1,35 @@
 import { prisma } from "@/lib/prisma";
 import UmkmDashboardClient from "./UmkmDashboardClient";
+import { withSafePrisma } from "@/lib/safe-prisma";
+
+export const dynamic = "force-dynamic";
 
 export default async function DashboardUmkmPage() {
-  // 1. Ambil semua profil UMKM
-  const allUmkms = await prisma.umkmProfile.findMany({
-    include: { user: true },
+  // Gunakan Safe Prisma Wrapper untuk menghindari error cold start/sync di Next.js
+  const { allUmkms, allPesanan } = await withSafePrisma(async () => {
+    const [umkms, pesanan] = await Promise.all([
+      prisma.umkmProfile.findMany({
+        include: { user: true },
+      }),
+      prisma.pesanan.findMany({
+        include: {
+          kuotaHarian: { include: { masjid: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
+    return { allUmkms: umkms, allPesanan: pesanan };
   });
 
-  const umkmAwal = allUmkms[0];
-
-  if (!umkmAwal) {
+  if (allUmkms.length === 0) {
     return (
-      <div className="p-10 text-center bg-white rounded-3xl border border-dashed">
-        <p className="text-gray-400">Data UMKM belum ada. Jalankan seeder dulu!</p>
+      <div className="p-10 text-center bg-white rounded-3xl border border-dashed border-stone-200">
+        <p className="text-stone-400 font-bold italic uppercase tracking-widest text-xs">
+          Data UMKM belum tersedia
+        </p>
       </div>
     );
   }
-
-  // 2. Ambil SEMUA pesanan UMKM (Biar pas ganti tab, datanya langsung ada)
-  const allPesanan = await prisma.pesanan.findMany({
-    include: {
-      kuotaHarian: { include: { masjid: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
 
   return <UmkmDashboardClient allUmkms={allUmkms} allPesanan={allPesanan} />;
 }

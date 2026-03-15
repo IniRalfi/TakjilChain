@@ -3,15 +3,18 @@ import { StatusKuota } from "@/generated/prisma/client";
 import HeroSection from "@/components/HeroSection";
 import FeatureSection from "@/components/FeatureSection";
 import MasjidListSection from "@/components/MasjidListSection";
+import { withSafePrisma } from "@/lib/safe-prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  // Ambil semua kuota OPEN dan urutkan dari tanggal terdekat
-  const listSemuaKuota = await prisma.kuotaHarian.findMany({
-    where: { status: StatusKuota.OPEN },
-    include: { masjid: true },
-    orderBy: { tanggal: "asc" },
+  // Ambil semua kuota OPEN dengan mekanisme Safe-Prisma (Retry & Delay)
+  const listSemuaKuota = await withSafePrisma(async () => {
+    return await prisma.kuotaHarian.findMany({
+      where: { status: StatusKuota.OPEN },
+      include: { masjid: true },
+      orderBy: { tanggal: "asc" },
+    });
   });
 
   // Hapus Duplikat Masjid (Ambil hanya 1 hari terdekat per masjid)
@@ -20,15 +23,12 @@ export default async function HomePage() {
     if (!mapUnik.has(kuota.masjidProfileId)) {
       mapUnik.set(kuota.masjidProfileId, kuota);
     }
-    // Jika sudah ada, abaikan, karena kita sudah urutkan by tanggal asc
-    // jadi yang pertama masuk map pasti yang paling dekat harinya.
   }
 
   // Ubah Map kembali ke array
   const listKuotaUnik = Array.from(mapUnik.values());
 
   // Urutkan List Unik berdasarkan urgensinya (dari yang paling butuh bantuan / rasio terkecil)
-  // Untuk di homepage, kita bisa sort by terpenuhi (paling kritis di atas)
   const sortedByUrgency = listKuotaUnik.sort(
     (a, b) => a.kuotaTerpenuhi / a.kuotaTotal - b.kuotaTerpenuhi / b.kuotaTotal,
   );
@@ -37,14 +37,9 @@ export default async function HomePage() {
   const displayedKuota = sortedByUrgency.slice(0, 9);
 
   return (
-    <div className="space-y-24">
-      {/* Komponen Hero */}
+    <div className="space-y-24 animate-in fade-in duration-1000">
       <HeroSection />
-
-      {/* Komponen Deskripsi/How It Works */}
       <FeatureSection />
-
-      {/* Komponen List Card Masjid. Oper data yang udah difilter bersih dari Prisma */}
       <MasjidListSection displayedKuota={displayedKuota} />
     </div>
   );

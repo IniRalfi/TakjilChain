@@ -13,12 +13,12 @@ export default function HeroSection() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-300"></span>
           </span>
-          Ramadhan 2026 Segera Tiba
+          Ramadhan 2026 Telah Tiba
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1]">
           Jangan Biarkan Masjid <br className="hidden sm:block" />
-          Kekurangan <span className="text-emerald-200">Takjil.</span>
+          Kekurangan <span className="text-amber-500">Takjil.</span>
         </h1>
 
         <p className="text-lg sm:text-xl text-emerald-50 max-w-2xl mx-auto leading-relaxed">

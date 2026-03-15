@@ -18,8 +18,9 @@ export default function Footer() {
                   sizes="120px"
                 />
               </div>
-              <h2 className="font-extrabold text-xl tracking-tight text-emerald-600">
-                TakjilChain
+              <h2 className="font-extrabold text-xl tracking-tight">
+                <span className="text-emerald-600">Takjil</span>
+                <span className="text-amber-500">Chain</span>
               </h2>
             </Link>
             <p className="text-gray-500 text-sm leading-relaxed md:max-w-sm mx-auto md:mx-0">
@@ -58,6 +59,14 @@ export default function Footer() {
                   className="text-sm text-gray-500 hover:text-emerald-600"
                 >
                   Login UMKM
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/donatur/laporan"
+                  className="text-sm text-gray-500 hover:text-emerald-600"
+                >
+                  Laporan Dampak
                 </Link>
               </li>
             </ul>

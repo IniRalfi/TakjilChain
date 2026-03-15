@@ -11,28 +11,34 @@ import {
   Check,
 } from "lucide-react";
 import Link from "next/link";
+import { withSafePrisma } from "@/lib/safe-prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function DonasiSuccessPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  // 1. Ambil data donasi
-  const donasi = await prisma.donasi.findUnique({
-    where: { id },
-    include: {
-      kuotaHarian: { include: { masjid: true } },
-    },
+  // Gunakan Safe Prisma Wrapper agar tidak timeout saat cold start/sync
+  const { donasi, pesanan } = await withSafePrisma(async () => {
+    const d = await prisma.donasi.findUnique({
+      where: { id },
+      include: {
+        kuotaHarian: { include: { masjid: true } },
+      },
+    });
+
+    if (!d) return { donasi: null, pesanan: null };
+
+    const p = await prisma.pesanan.findFirst({
+      where: { donasiId: d.id },
+      include: { umkm: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return { donasi: d, pesanan: p };
   });
 
   if (!donasi) return notFound();
-
-  // 2. Cari Pesanan terkait (Gunakan direct relation donasiId)
-  const pesanan = await prisma.pesanan.findFirst({
-    where: { donasiId: donasi.id },
-    include: { umkm: true },
-    orderBy: { createdAt: "desc" },
-  });
 
   const isPaid = donasi.status === "PAID";
   const hasNarasi = !!donasi.narasiAI;
@@ -102,7 +108,7 @@ export default async function DonasiSuccessPage({ params }: { params: Promise<{ 
             )}
           </div>
 
-          <h1 className="text-4xl font-black text-stone-900 italic tracking-tight mb-4">
+          <h1 className="text-4xl font-black text-stone-900 italic tracking-tight mb-4 text-balance">
             {isPaid ? "Alhamdulillah! Berkah Diterima" : "Terima Kasih, Sedang Diproses..."}
           </h1>
           <p className="text-stone-500 font-medium text-lg mb-8 max-w-xl mx-auto leading-relaxed italic">
@@ -141,7 +147,6 @@ export default async function DonasiSuccessPage({ params }: { params: Promise<{ 
           </div>
 
           <div className="grid md:grid-cols-5 gap-6 relative">
-            {/* Connector Line (Desktop) */}
             <div className="hidden md:block absolute top-[26px] left-[10%] right-[10%] h-[2px] bg-stone-800" />
 
             {phases.map((phase) => (
@@ -149,7 +154,6 @@ export default async function DonasiSuccessPage({ params }: { params: Promise<{ 
                 key={phase.id}
                 className="relative z-10 flex flex-col items-center text-center group"
               >
-                {/* Circle Icon */}
                 <div
                   className={`w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 shadow-lg ${
                     phase.completed
@@ -162,7 +166,6 @@ export default async function DonasiSuccessPage({ params }: { params: Promise<{ 
                   {phase.completed ? <Check size={28} /> : <phase.icon size={24} />}
                 </div>
 
-                {/* Text */}
                 <div className="mt-6">
                   <h4
                     className={`text-sm font-black italic transition-colors ${phase.active || phase.completed ? "text-white" : "text-stone-600"}`}
@@ -212,7 +215,7 @@ export default async function DonasiSuccessPage({ params }: { params: Promise<{ 
               </div>
             ) : (
               <div className="bg-white/50 backdrop-blur-sm p-6 rounded-3xl border border-amber-200/30">
-                <p className="text-stone-500 font-medium leading-relaxed italic">
+                <p className="text-stone-500 font-medium leading-relaxed italic text-balance">
                   {isPaid
                     ? "Logistik TakjilChain sedang bekerja di balik layar. Begitu takjil tiba di masjid, AI kami akan menuliskan rincian distribusi dan dampaknya khusus untuk Anda di sini."
                     : "Selesaikan pembayaran untuk mengaktifkan pelaporan real-time."}
@@ -222,7 +225,7 @@ export default async function DonasiSuccessPage({ params }: { params: Promise<{ 
           </div>
 
           <div className="w-full md:w-64 shrink-0 bg-white p-6 rounded-[2.5rem] border border-amber-200 shadow-sm shadow-amber-200/20">
-            <div className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2">
+            <div className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2 italic">
               Penerima Manfaat
             </div>
             <p className="font-black text-stone-900 italic text-lg leading-tight mb-4">
@@ -232,15 +235,15 @@ export default async function DonasiSuccessPage({ params }: { params: Promise<{ 
               <div className="px-3 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-black">
                 {donasi.jumlahPorsi} Porsi
               </div>
-              <div className="px-3 py-1 bg-stone-100 text-stone-500 rounded-lg text-[10px] font-black">
+              <div className="px-3 py-1 bg-stone-100 text-stone-500 rounded-lg text-[10px] font-black uppercase">
                 Takjil Buka
               </div>
             </div>
             <Link
-              href="/"
+              href="/donatur/laporan"
               className="block w-full text-center py-4 bg-stone-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 transition-all duration-300"
             >
-              Kembali Beranda
+              Lihat Riwayat Donasi
             </Link>
           </div>
         </div>
