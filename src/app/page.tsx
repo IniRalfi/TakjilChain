@@ -1,82 +1,145 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { StatusKuota } from "@/generated/prisma/client";
-import { ArrowRight, MapPin, Users } from "lucide-react";
+import {
+  ArrowRight,
+  MapPin,
+  Users,
+  UtensilsCrossed,
+  ShieldCheck,
+  HeartHandshake,
+} from "lucide-react";
 
-export const dynamic = "force-dynamic"; // Pastikan vercel tidak meng-cache data ini
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  // Ambil kuota yang masih OPEN.
-  // (Karena kita pakai data dummy Ramadhan di masa depan, kita ambil semuanya yang OPEN dulu untuk diurutkan)
   const listKuota = await prisma.kuotaHarian.findMany({
-    where: {
-      status: StatusKuota.OPEN,
-    },
-    include: {
-      masjid: true,
-    },
+    where: { status: StatusKuota.OPEN },
+    include: { masjid: true },
   });
 
-  // Algoritma Urgency: Urutkan dari persentase terkecil (paling butuh bantuan) ke terbesar
-  const sortedByUrgency = listKuota.sort((a, b) => {
-    const persentaseA = a.kuotaTerpenuhi / a.kuotaTotal;
-    const persentaseB = b.kuotaTerpenuhi / b.kuotaTotal;
-    return persentaseA - persentaseB;
-  });
-
-  // Ambil 6 teratas untuk ditampilkan di landing page
+  const sortedByUrgency = listKuota.sort(
+    (a, b) => a.kuotaTerpenuhi / a.kuotaTotal - b.kuotaTerpenuhi / b.kuotaTotal,
+  );
   const displayedKuota = sortedByUrgency.slice(0, 6);
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-24">
       {/* 🚀 HERO SECTION */}
-      <section className="text-center pt-16 pb-8 space-y-6">
-        <h2 className="text-4xl md:text-6xl font-extrabold text-charcoal tracking-tight leading-tight">
-          Berbagi Takjil,
-          <br />
-          <span className="text-emerald-main">Tepat Sasaran.</span>
-        </h2>
-        <p className="text-lg text-charcoal-muted max-w-2xl mx-auto">
-          Elevating Ramadan Charity with AI-Driven Supply Chain. Tidak ada lagi masjid yang
-          kelebihan atau kekurangan takjil di Pontianak.
-        </p>
-        <div className="pt-4 flex items-center justify-center gap-4">
-          <a
-            href="#daftar-masjid"
-            className="inline-flex items-center gap-2 bg-emerald-main text-white px-6 py-3 rounded-xl font-medium hover:bg-emerald-light transition-colors shadow-sm"
-          >
-            Lihat Masjid <ArrowRight size={20} />
-          </a>
+      <section className="relative pt-10 pb-20 lg:pt-20 lg:pb-28 overflow-hidden rounded-3xl bg-emerald-600 px-6 sm:px-12 mt-4 text-center">
+        {/* Dekorasi Background */}
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
+
+        <div className="relative z-10 max-w-3xl mx-auto space-y-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/40 border border-emerald-400/30 text-emerald-50 text-xs sm:text-sm font-medium backdrop-blur-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-300"></span>
+            </span>
+            Ramadhan 2026 Segera Tiba
+          </div>
+
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1]">
+            Jangan Biarkan Masjid <br className="hidden sm:block" />
+            Kekurangan <span className="text-emerald-200">Takjil.</span>
+          </h1>
+
+          <p className="text-lg sm:text-xl text-emerald-50 max-w-2xl mx-auto leading-relaxed">
+            Salurkan kebaikanmu tepat sasaran. TakjilChain menggunakan AI untuk mendistribusikan
+            donasimu ke masjid yang <b>benar-benar membutuhkan</b> melalui UMKM lokal.
+          </p>
+
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href="#daftar-masjid"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-emerald-600 px-8 py-4 rounded-2xl font-bold hover:bg-emerald-50 hover:scale-105 transition-all shadow-xl shadow-emerald-900/20"
+            >
+              Mulai Sedekah <ArrowRight size={20} />
+            </a>
+            <Link
+              href="/dashboard/umkm"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-700/50 text-white border border-emerald-400/30 px-8 py-4 rounded-2xl font-semibold hover:bg-emerald-700 transition-all"
+            >
+              Gabung Jadi UMKM
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* 🕌 URGENCY LIST SECTION */}
-      <section id="daftar-masjid" className="space-y-6 scroll-mt-24">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h3 className="text-2xl font-bold text-charcoal">Daftar Masjid Prioritas</h3>
-            <p className="text-charcoal-muted text-sm mt-1">
-              Diurutkan berdasarkan urgensi kekurangan takjil terbanyak.
+      {/* 💡 FITUR (KENAPA TAKJILCHAIN) */}
+      <section className="py-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+            Bagaimana Ini Bekerja?
+          </h2>
+          <p className="text-gray-500 mt-3 text-lg">
+            Solusi tuntas cegah mubazir saat berbuka puasa.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-3 gap-8 px-4">
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center space-y-4 hover:-translate-y-1 transition-transform">
+            <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto rotate-3">
+              <ShieldCheck size={28} />
+            </div>
+            <h3 className="font-bold text-xl text-gray-900">Tepat Sasaran</h3>
+            <p className="text-gray-500 leading-relaxed">
+              Sistem membatasi donasi jika kuota suatu masjid sudah penuh, dialihkan ke masjid lain.
             </p>
           </div>
-          <span className="bg-amber-100/50 border border-amber-200 text-amber-main px-4 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2 w-max">
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center space-y-4 hover:-translate-y-1 transition-transform">
+            <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto -rotate-3">
+              <UtensilsCrossed size={28} />
+            </div>
+            <h3 className="font-bold text-xl text-gray-900">Bantu UMKM Lokal</h3>
+            <p className="text-gray-500 leading-relaxed">
+              Pesanan takjil langsung di-order secara otomatis ke dapur UMKM terdekat dari lokasi
+              masjid.
+            </p>
+          </div>
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center space-y-4 hover:-translate-y-1 transition-transform">
+            <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto rotate-3">
+              <HeartHandshake size={28} />
+            </div>
+            <h3 className="font-bold text-xl text-gray-900">Transparan</h3>
+            <p className="text-gray-500 leading-relaxed">
+              Pantau langsung progres distribusi sedekahmu hingga takjil fisik diantar ke lokasi.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 🕌 DAFTAR MASJID PRIORITAS */}
+      <section id="daftar-masjid" className="scroll-mt-32">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 px-2">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+              Prioritas Hari Ini 🚨
+            </h2>
+            <p className="text-gray-500 text-lg mt-2 max-w-xl">
+              Daftar masjid yang kekurangan takjil terbanyak. Bantuanmu sangat berarti bagi jamaah
+              mereka.
+            </p>
+          </div>
+          <div className="hidden md:flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full font-medium text-sm border border-emerald-100">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-main opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-main"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
-            Live Updates
-          </span>
+            Real-time Update
+          </div>
         </div>
 
         {displayedKuota.length === 0 ? (
-          <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center">
-            <p className="text-emerald-main font-medium text-lg">Alhamdulillah! 🙏</p>
-            <p className="text-charcoal-muted mt-2">
-              Semua kebutuhan takjil saat ini sudah terpenuhi.
+          <div className="bg-white p-12 rounded-3xl shadow-sm border border-emerald-100 text-center space-y-4">
+            <div className="text-6xl">🙌</div>
+            <h3 className="text-2xl font-bold text-emerald-600">Alhamdulillah!</h3>
+            <p className="text-gray-500 text-lg">
+              Semua kebutuhan takjil hari ini sudah terpenuhi. Terima kasih dermawan!
             </p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayedKuota.map((kuota) => {
               const persentase = Math.min(
                 100,
@@ -84,61 +147,72 @@ export default async function HomePage() {
               );
 
               return (
-                <div
+                <Link
                   key={kuota.id}
-                  className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md hover:border-emerald-light/30 transition-all group"
+                  href={`/masjid/${kuota.masjid.id}?kuotaHarianId=${kuota.id}`}
+                  className="group bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl hover:border-emerald-200 hover:-translate-y-1 transition-all duration-300 flex flex-col"
                 >
-                  <div className="space-y-4">
+                  <div className="p-6 space-y-5">
                     {/* Header Card */}
                     <div>
-                      <h4 className="font-bold text-lg text-charcoal line-clamp-1 group-hover:text-emerald-main transition-colors">
+                      <h4 className="font-bold text-xl text-gray-900 line-clamp-1 group-hover:text-emerald-600 transition-colors">
                         {kuota.masjid.nama}
                       </h4>
-                      <div className="flex items-start gap-1 text-sm text-charcoal-muted mt-1.5">
-                        <MapPin size={16} className="shrink-0 mt-0.5 opacity-70" />
-                        <span className="line-clamp-2 leading-relaxed">{kuota.masjid.alamat}</span>
+                      <div className="flex items-start gap-1.5 text-sm text-gray-500 mt-2">
+                        <MapPin size={16} className="shrink-0 mt-0.5 text-emerald-500" />
+                        <span className="line-clamp-2 leading-snug">{kuota.masjid.alamat}</span>
                       </div>
                     </div>
 
-                    {/* Info Tambahan */}
-                    <div className="flex items-center justify-between text-sm py-2">
-                      <span className="text-charcoal-muted flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
-                        <Users size={14} className="opacity-70 text-emerald-main" />
-                        {kuota.masjid.kapasitasJamaah} Jamaah
-                      </span>
-                      <span className="font-medium text-amber-main bg-amber-50 px-2 py-1 rounded-md">
-                        {kuota.jenisRequest || "Bebas"}
-                      </span>
+                    {/* Stats Ringkas */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1.5 bg-gray-50 text-gray-600 px-3 py-1.5 rounded-lg text-sm font-medium">
+                        <Users size={16} />
+                        {kuota.masjid.kapasitasJamaah}
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg text-sm font-medium">
+                        {kuota.jenisRequest || "Takjil Bebas"}
+                      </div>
                     </div>
 
-                    {/* Progress Bar */}
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-sm font-medium">
-                        <span className="text-emerald-main flex items-center gap-1">
-                          {kuota.kuotaTerpenuhi} Porsi
-                          <span className="text-xs font-normal text-charcoal-muted">Selesai</span>
-                        </span>
-                        <span className="text-charcoal-muted">Target: {kuota.kuotaTotal}</span>
+                    {/* Progress Bar Container */}
+                    <div className="bg-gray-50 p-4 rounded-2xl space-y-3">
+                      <div className="flex justify-between items-end">
+                        <div className="space-y-1">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Terkumpul
+                          </p>
+                          <p className="text-xl font-bold text-emerald-600 leading-none">
+                            {kuota.kuotaTerpenuhi}{" "}
+                            <span className="text-sm font-medium text-gray-400">
+                              / {kuota.kuotaTotal} porsi
+                            </span>
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-bold text-gray-900">{persentase}%</span>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+
+                      {/* Bar Line */}
+                      <div className="h-2.5 w-full bg-gray-200 rounded-full overflow-hidden">
                         <div
-                          className="bg-emerald-main h-2.5 rounded-full transition-all duration-1000 ease-out"
+                          className="h-full bg-emerald-500 rounded-full group-hover:bg-emerald-400 transition-all duration-500 ease-out"
                           style={{ width: `${persentase}%` }}
                         ></div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Tombol Aksi */}
-                  <div className="pt-6 mt-auto">
-                    <Link
-                      href={`/masjid/${kuota.masjid.id}?kuotaHarianId=${kuota.id}`}
-                      className="w-full flex items-center justify-center gap-2 bg-charcoal text-white px-4 py-2.5 rounded-xl font-medium hover:bg-emerald-main transition shadow-sm"
-                    >
-                      Bantu Penuhi <ArrowRight size={16} />
-                    </Link>
+                  {/* Faux Button (Biar bisa diklik satu card full) */}
+                  <div className="bg-gray-50/80 px-6 py-4 border-t border-gray-100 flex items-center justify-between text-emerald-600 font-semibold group-hover:bg-emerald-600 group-hover:text-white transition-colors mt-auto">
+                    <span>Donasi Sekarang</span>
+                    <ArrowRight
+                      size={18}
+                      className="group-hover:translate-x-1 transition-transform"
+                    />
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

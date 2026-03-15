@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import "./globals.css";
 
 // Menggunakan font Inter untuk kesan tech-savvy & clean
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TakjilChain | Elevating Ramadan Charity",
+  title: "TakjilChain | Berbagi Takjil Cerdas",
   description: "Platform AI-Driven untuk Distribusi Sedekah Takjil di Kota Pontianak.",
 };
 
@@ -16,36 +18,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id">
-      {/* Tambahkan suppressHydrationWarning di sini */}
+    <html lang="id" className="scroll-smooth">
       <body
         suppressHydrationWarning
-        className={`${inter.className} min-h-screen bg-offwhite text-charcoal antialiased selection:bg-emerald-main selection:text-white`}
+        className={`${inter.className} min-h-screen bg-gray-50/50 text-gray-900 antialiased selection:bg-emerald-500 selection:text-white flex flex-col`}
       >
-        {/* Navbar Global Sederhana (Glassmorphism) */}
-        <nav className="fixed top-0 w-full z-50 glass shadow-sm">
-          <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-emerald-main text-2xl">🌙</span>
-              <h1 className="font-bold text-xl tracking-tight text-emerald-main">TakjilChain</h1>
-            </div>
-            {/* Navigasi Placeholder */}
-            <div className="text-sm font-medium text-charcoal-muted hidden md:flex gap-6">
-              <a href="/" className="hover:text-emerald-main transition">
-                Beranda
-              </a>
-              <a href="/dashboard/masjid" className="hover:text-emerald-main transition">
-                Pengurus
-              </a>
-              <a href="/dashboard/umkm" className="hover:text-emerald-main transition">
-                UMKM
-              </a>
-            </div>
-          </div>
-        </nav>
-
-        {/* Padding top agar konten tidak tertabrak fixed navbar */}
-        <main className="pt-24 pb-12 px-4 max-w-5xl mx-auto">{children}</main>
+        <Navbar />
+        {/* Konten utama membentang secara flex 1 agar footer selalu di bawah */}
+        <main className="flex-1 w-full max-w-6xl mx-auto pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+          {children}
+        </main>
+        <Footer />
       </body>
     </html>
   );
