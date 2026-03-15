@@ -1,26 +1,30 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Palet Warna Modern-Spiritual Minimalist */
+  --color-emerald-main: #065f46;
+  --color-emerald-light: #059669;
+  --color-offwhite: #f9fafb;
+  --color-charcoal: #111827;
+  --color-charcoal-muted: #374151;
+  --color-amber-main: #f59e0b;
+
+  /* Bawaan UI Radius */
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Base style resets */
+@layer base {
+  body {
+    background-color: var(--color-offwhite);
+    color: var(--color-charcoal);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Utilities custom contoh untuk Glassmorphism Navbar */
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20;
+  }
 }
