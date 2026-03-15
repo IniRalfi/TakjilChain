@@ -1,30 +1,35 @@
 import Link from "next/link";
+import { ArrowLeft, Map } from "lucide-react";
 
 export default function NotFound() {
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center px-6 text-center">
-      <h1 className="text-[150px] font-black leading-none text-gray-200 dark:text-gray-800/50">
-        404
-      </h1>
-      <div className="absolute rotate-12 rounded bg-emerald-600 px-2 py-1 text-sm font-bold tracking-widest text-white">
-        PAGE NOT FOUND
+      {/* Sketsa/Gambar 404 */}
+      <div className="mb-8 relative group">
+        <div className="text-[12rem] font-black leading-none text-gray-100 select-none">404</div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="bg-white p-4 rounded-2xl shadow-xl shadow-emerald-900/10 border border-gray-100 rotate-3 group-hover:rotate-0 transition-transform duration-500">
+            <Map size={64} className="text-emerald-500" />
+          </div>
+        </div>
       </div>
 
-      <p className="mt-8 text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
-        Halaman Tidak Ditemukan 🕵️‍♂️
+      <h1 className="text-3xl font-black text-gray-900 sm:text-4xl tracking-tight">
+        Wah, Tersesat ya? 🕵️‍♂️
+      </h1>
+
+      <p className="mt-4 max-w-md text-lg text-gray-600 font-medium leading-relaxed">
+        Halaman yang kamu cari nggak ada di peta kami. Mungkin lagi diservis atau jalannya ditutup.
       </p>
 
-      <p className="mt-4 max-w-lg text-lg text-gray-500 dark:text-gray-400">
-        Maaf, halaman yang kamu tuju mungkin telah dihapus, namanya berubah, atau untuk sementara
-        tidak tersedia.
-      </p>
-
-      <Link
-        href="/"
-        className="mt-8 rounded-xl bg-emerald-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all hover:-translate-y-1 hover:bg-emerald-500 hover:shadow-emerald-500/30 active:translate-y-0"
-      >
-        Kembali ke Beranda
-      </Link>
+      <div className="mt-10 flex flex-col sm:flex-row gap-4">
+        <Link
+          href="/"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-8 py-4 text-sm font-bold text-white shadow-xl shadow-emerald-600/20 transition-all hover:bg-emerald-500 hover:-translate-y-1 active:translate-y-0"
+        >
+          <ArrowLeft size={18} /> Kembali ke Beranda
+        </Link>
+      </div>
     </div>
   );
 }
