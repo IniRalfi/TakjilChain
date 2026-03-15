@@ -1,11 +1,9 @@
-import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { prisma } from "@/lib/prisma";
 import { StatusPesanan } from "@/generated/prisma/client";
+import { runAIWithFailover } from "@/lib/ai-handler";
 
-// Inisialisasi Google Gemini dengan API Key
-const ai = new GoogleGenAI({
-  apiKey: process.env["GEMINI_API_KEY"],
-});
+const DEFAULT_NARASI =
+  "Takjil telah sukses dan aman diantar ke tujuan! Terima kasih atas sedekah Anda yang sangat berarti bagi jamaah.";
 
 export async function generateNarasiAI(pesananId: string) {
   try {
@@ -32,73 +30,34 @@ export async function generateNarasiAI(pesananId: string) {
         })
       : "beberapa saat sebelum waktu berbuka";
 
-    // 1. Buat prompt
     const userPrompt = `
       Anda adalah "Agent Reporter" TakjilChain yang bertugas membuat laporan narasi donasi.
       Tulis satu paragraf singkat (maksimal 3-4 kalimat) yang menyentuh hati dan estetik untuk seorang donatur.
-      Laporan ini akan dikirim via WhatsApp atau Email kepada mereka.
-
+      
       Gunakan bahasa Indonesia yang sopan, islami, namun tetap terasa modern.
-      Hindari penggunaan emoji yang terlalu banyak. Gunakan tone yang apresiatif dan bersyukur.
+      Hindari emoji berlebihan. Tone: apresiatif dan bersyukur.
 
-      Data Transaksi yang harus dimasukkan ke dalam narasi:
-      - Nama Masjid Penerima: ${masjid.nama}
-      - Jumlah Porsi Tersalurkan: ${pesanan.jumlahPorsi} porsi
-      - UMKM Pembuat Takjil: ${umkm.namaUsaha}
-      - Waktu Tiba di Masjid: ${waktuAntarStr} WIB
-
-      Buatkan narasinya sekarang!
+      DATA WAJIB MASUK:
+      - Masjid: ${masjid.nama}
+      - Jumlah: ${pesanan.jumlahPorsi} porsi
+      - UMKM: ${umkm.namaUsaha}
+      - Waktu Tiba: ${waktuAntarStr} WIB
     `.trim();
 
-    console.log(`🤖 [Reporting Agent] Menghasilkan narasi untuk Pesanan ${pesananId}...`);
+    // Menggunakan AI Core Handler dengan Failover
+    const narasi = await runAIWithFailover(userPrompt, DEFAULT_NARASI);
 
-    // 2. Panggil API Gemini dengan SDK terbaru (@google/genai)
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      config: {
-        thinkingConfig: {
-          thinkingLevel: ThinkingLevel.HIGH,
-        },
-      },
-      contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-    });
-
-    const narasi = response.text || "Takjil telah sukses dan aman diantar ke tujuan!";
-
-    console.log("🤖 [Reporting Agent] Narasi Selesai generated!");
-
-    // 3. Simpan Narasi
+    // Simpan ke database
     if (pesanan.donasiId) {
       await prisma.donasi.update({
         where: { id: pesanan.donasiId },
         data: { narasiAI: narasi },
       });
-      console.log(`🤖 [Reporting Agent] Sukses menyimpan narasi ke Donasi ${pesanan.donasiId}.`);
-    } else {
-      // Fallback heuristic jika donasiId kosong (old data)
-      const donasiTerkait = await prisma.donasi.findFirst({
-        where: {
-          kuotaHarianId: pesanan.kuotaHarianId,
-          jumlahPorsi: pesanan.jumlahPorsi,
-          status: "PAID",
-        },
-        orderBy: { createdAt: "desc" },
-      });
-
-      if (donasiTerkait) {
-        await prisma.donasi.update({
-          where: { id: donasiTerkait.id },
-          data: { narasiAI: narasi },
-        });
-        console.log(
-          `🤖 [Reporting Agent] Sukses menyimpan narasi ke Donasi ${donasiTerkait.id} (Heuristic).`,
-        );
-      }
     }
 
     return narasi;
   } catch (error) {
-    console.error("🤖 [Reporting Agent] GAGAL generate narasi AI:", error);
+    console.error("🤖 [Reporting Agent] UNEXPECTED ERROR:", error);
     return null;
   }
 }
