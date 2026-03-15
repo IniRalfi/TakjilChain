@@ -179,27 +179,27 @@ bun add @google/generative-ai
 
 ### 4.2 — Halaman Donatur (`/`)
 
-- [ ] **Hero Section** — Tagline, sub-deskripsi, dan CTA utama "Lihat Masjid yang Butuh Takjil".
-- [ ] **Daftar Masjid (Urgency List)** — Card list masjid yang kuotanya belum terpenuhi hari ini, diurutkan dari persentase kuota terendah (paling butuh) ke tertinggi.
+- [x] **Hero Section** — Tagline, sub-deskripsi, dan CTA utama "Lihat Masjid yang Butuh Takjil".
+- [x] **Daftar Masjid (Urgency List)** — Card list masjid yang kuotanya belum terpenuhi hari ini, diurutkan dari persentase kuota terendah (paling butuh) ke tertinggi.
   - Setiap card: nama masjid, alamat, progress bar kuota, tombol "Donasi Sekarang".
-- [ ] **Halaman Detail Masjid** (`/masjid/[id]`) — Informasi lengkap, progress bar kuota real-time, slider/input jumlah porsi, kalkulasi harga otomatis, tombol checkout.
-- [ ] **Halaman Konfirmasi / Impact Report** (`/donasi/[id]`) — Tampilkan AI Narrative Report setelah pesanan terkonfirmasi. Tambahkan tombol share ke WhatsApp.
+- [x] **Halaman Detail Masjid** (`/masjid/[id]`) — Informasi lengkap, progress bar kuota real-time, slider/input jumlah porsi, kalkulasi harga otomatis, tombol checkout.
+- [x] **Halaman Konfirmasi / Impact Report** (`/donasi/[id]`) — Tampilkan AI Narrative Report setelah pesanan terkonfirmasi. Tambahkan tombol share ke WhatsApp.
 
 ### 4.3 — Dashboard Pengurus Masjid (`/dashboard/masjid`)
 
-- [ ] **Autentikasi** — Login page dengan Supabase Auth (role: `PENGURUS_MASJID`).
-- [ ] **Manajemen Kuota** — Kalender Ramadhan interaktif untuk mengeset kuota per hari. Input jenis takjil (opsional, misal: "Nasi Kotak", "Kue Basah").
-- [ ] **Live Status Board** — Tampilkan status real-time: donasi masuk, UMKM yang bertugas, status pengiriman per pesanan.
-- [ ] **Tombol Konfirmasi** — Satu tombol besar "Takjil Diterima ✅" yang men-trigger settlement dana ke UMKM.
-- [ ] **Insight AI Card** — Rekomendasi dari Forecasting Agent (tambah kuota saat malam spesial, dll.).
+- [x] **Autentikasi** — Login page dengan Supabase Auth (role: `PENGURUS_MASJID`). (Disimulasikan lewat prisma firstUser untuk MVP testing)
+- [x] **Manajemen Kuota** — Kalender Ramadhan interaktif untuk mengeset kuota per hari. Input jenis takjil (opsional, misal: "Nasi Kotak", "Kue Basah").
+- [x] **Live Status Board** — Tampilkan status real-time: donasi masuk, UMKM yang bertugas, status pengiriman per pesanan.
+- [x] **Tombol Konfirmasi** — Satu tombol besar "Takjil Diterima ✅" yang men-trigger settlement dana ke UMKM.
+- [x] **Insight AI Card** — Rekomendasi dari Forecasting Agent (tambah kuota saat malam spesial, dll.).
 
 ### 4.4 — Dashboard UMKM (`/dashboard/umkm`)
 
-- [ ] **Autentikasi** — Login page dengan Supabase Auth (role: `UMKM`).
-- [ ] **Order Management** — Tabel pesanan masuk dengan countdown 30 menit, tombol `Terima` dan `Tolak`.
-- [ ] **Manajemen Kapasitas** — Input limit produksi harian. Progress bar visual sisa kapasitas hari ini.
+- [x] **Autentikasi** — Login page dengan Supabase Auth (role: `UMKM`). (Disimulasikan untuk MVP testing)
+- [x] **Order Management** — Tabel pesanan masuk dengan countdown 30 menit, tombol `Terima` dan `Tolak`.
+- [x] **Manajemen Kapasitas** — Input limit produksi harian. Progress bar visual sisa kapasitas hari ini.
 - [ ] **Upload Bukti** — Form upload foto setelah mengantarkan takjil (simpan ke Supabase Storage).
-- [ ] **Dompet UMKM** — Tampilkan total saldo terkumpul + tombol "Cairkan Dana" (integrasi Mayar Disbursement API).
+- [x] **Dompet UMKM** — Tampilkan total saldo terkumpul + tombol "Cairkan Dana" (integrasi Mayar Disbursement API).
 
 ---
 
