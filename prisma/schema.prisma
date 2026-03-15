@@ -1,7 +1,8 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// ============================================================
+// TakjilChain — Prisma Schema
+// Platform AI-Driven Distribusi Sedekah Takjil
+// ============================================================
+// Docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +11,189 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Role {
+  DONATUR
+  PENGURUS_MASJID
+  UMKM
+}
+
+enum StatusKuota {
+  OPEN // Masih menerima donasi
+  FULL // Kuota terpenuhi, tidak menerima donasi baru
+  CLOSED // Ditutup manual oleh pengurus masjid
+}
+
+enum StatusDonasi {
+  PENDING // Menunggu pembayaran
+  PAID // Pembayaran berhasil dikonfirmasi Mayar
+  FAILED // Pembayaran gagal / expired
+  REFUND // Dana dikembalikan ke donatur
+}
+
+enum StatusPesanan {
+  WAITING // Menunggu konfirmasi UMKM (countdown 30 menit)
+  ACCEPTED // UMKM menerima pesanan
+  REJECTED // UMKM menolak / timeout → akan di-reroute oleh AI
+  DELIVERED // UMKM sudah antar & upload foto bukti
+  CONFIRMED // Masjid konfirmasi diterima → trigger pembayaran ke UMKM
+  CANCELLED // Pesanan dibatalkan oleh sistem
+}
+
+// ============================================================
+// MODELS
+// ============================================================
+
+/// Tabel pusat autentikasi. Satu user bisa punya satu role.
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String // Hashed dengan bcrypt
+  role      Role
+  phone     String? // Opsional, untuk notifikasi WhatsApp
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relasi berdasarkan role (hanya satu yang aktif per user)
+  masjidProfile MasjidProfile?
+  umkmProfile   UmkmProfile?
+  donasi        Donasi[]
+
+  @@map("users")
+}
+
+/// Profil detail untuk user berole PENGURUS_MASJID
+model MasjidProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  nama            String
+  alamat          String
+  kecamatan       String  @default("Pontianak")
+  koordinatLat    Float // Latitude GPS
+  koordinatLng    Float // Longitude GPS
+  fotoUrl         String? // Foto eksterior masjid
+  kapasitasJamaah Int? // Estimasi jumlah jamaah per hari
+
+  kuotaHarian KuotaHarian[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("masjid_profiles")
+}
+
+/// Kebutuhan takjil harian per masjid (satu baris = satu hari Ramadhan)
+model KuotaHarian {
+  id              String        @id @default(cuid())
+  masjidProfileId String
+  masjid          MasjidProfile @relation(fields: [masjidProfileId], references: [id], onDelete: Cascade)
+
+  tanggal        DateTime // Tanggal spesifik hari Ramadhan
+  kuotaTotal     Int // Total porsi yang dibutuhkan
+  kuotaTerpenuhi Int         @default(0) // Terupdate setiap ada donasi PAID
+  hargaPerPorsi  Int         @default(15000) // Dalam Rupiah
+  jenisRequest   String? // Spesifikasi optional, cth: "Nasi Kotak", "Kue Basah"
+  catatan        String? // Catatan tambahan dari pengurus
+  status         StatusKuota @default(OPEN)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  donasi  Donasi[]
+  pesanan Pesanan[]
+
+  // Satu masjid hanya boleh punya satu kuota per tanggal
+  @@unique([masjidProfileId, tanggal])
+  @@map("kuota_harian")
+}
+
+/// Profil detail untuk user berole UMKM
+model UmkmProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  nama         String
+  namaUsaha    String // Nama dapur / katering
+  alamat       String
+  kecamatan    String  @default("Pontianak")
+  koordinatLat Float // Latitude GPS dapur/produksi
+  koordinatLng Float // Longitude GPS dapur/produksi
+  fotoUsahaUrl String? // Foto produk / dapur
+
+  kapasitasHarian Int // Maksimum porsi yang bisa diproduksi per hari
+  sisaKapasitas   Int // Diupdate real-time, tidak boleh melebihi kapasitasHarian
+  hargaPerPorsi   Int   @default(15000) // Harga jual per porsi ke platform
+  saldo           Int   @default(0) // Akumulasi dana hasil pesanan CONFIRMED (Rupiah)
+  ratingRataRata  Float @default(5.0) // Rata-rata rating dari masjid (1–5)
+
+  pesanan   Pesanan[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("umkm_profiles")
+}
+
+/// Riwayat transaksi donatur via Mayar
+model Donasi {
+  id        String @id @default(cuid())
+  donaturId String
+  donatur   User   @relation(fields: [donaturId], references: [id])
+
+  kuotaHarianId String
+  kuotaHarian   KuotaHarian @relation(fields: [kuotaHarianId], references: [id])
+
+  jumlahPorsi Int // Jumlah porsi yang didonasikan
+  totalHarga  Int // jumlahPorsi × hargaPerPorsi (Rupiah)
+  status      StatusDonasi @default(PENDING)
+
+  // Data dari Mayar API
+  mayarPaymentId  String?   @unique // ID transaksi dari Mayar
+  mayarPaymentUrl String? // Link pembayaran Mayar
+  mayarPaidAt     DateTime? // Timestamp konfirmasi pembayaran
+
+  // Narasi laporan dari AI (diisi setelah pesanan CONFIRMED)
+  narasiAI String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("donasi")
+}
+
+/// Logistik: order dari sistem ke UMKM untuk memenuhi satu KuotaHarian
+model Pesanan {
+  id            String      @id @default(cuid())
+  kuotaHarianId String
+  kuotaHarian   KuotaHarian @relation(fields: [kuotaHarianId], references: [id])
+
+  umkmProfileId String
+  umkm          UmkmProfile @relation(fields: [umkmProfileId], references: [id])
+
+  jumlahPorsi Int
+  status      StatusPesanan @default(WAITING)
+
+  // Bukti pengiriman (wajib diisi UMKM sebelum Masjid bisa konfirmasi)
+  fotoEvidenceUrl String?
+
+  // Tracking re-routing oleh AI
+  attemptKe        Int     @default(1) // Percobaan ke berapa (1 = pertama, 2 = re-route, dst.)
+  pesananSebelumId String? // ID pesanan sebelumnya yang di-reject / timeout
+
+  // Timestamps untuk trigger batas waktu 30 menit oleh Logistics Agent
+  acceptedAt  DateTime? // Set saat UMKM klik Terima
+  deliveredAt DateTime? // Set saat UMKM upload foto
+  confirmedAt DateTime? // Set saat Masjid konfirmasi
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("pesanan")
 }
