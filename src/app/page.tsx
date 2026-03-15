@@ -8,20 +8,43 @@ import {
   UtensilsCrossed,
   ShieldCheck,
   HeartHandshake,
+  TrendingUp,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const listKuota = await prisma.kuotaHarian.findMany({
+  const listSemuaKuota = await prisma.kuotaHarian.findMany({
     where: { status: StatusKuota.OPEN },
     include: { masjid: true },
   });
 
-  const sortedByUrgency = listKuota.sort(
+  // Hapus Duplikat Masjid (Jika 1 masjid punya open kuota untuk 5 hari kedepan, tampilkan 1 saja dari hari terdekat/paling darurat)
+  const mapUnik = new Map();
+  for (const kuota of listSemuaKuota) {
+    if (!mapUnik.has(kuota.masjidProfileId)) {
+      mapUnik.set(kuota.masjidProfileId, kuota);
+    } else {
+      // Jika sudah ada, pilih mana yang paling sedikit terpenuhi (urutannya lebih kritis)
+      const existing = mapUnik.get(kuota.masjidProfileId);
+      const rasioBaru = kuota.kuotaTerpenuhi / kuota.kuotaTotal;
+      const rasioLama = existing.kuotaTerpenuhi / existing.kuotaTotal;
+      if (rasioBaru < rasioLama) {
+        mapUnik.set(kuota.masjidProfileId, kuota);
+      }
+    }
+  }
+
+  // Ubah Map kembali ke array
+  const listKuotaUnik = Array.from(mapUnik.values());
+
+  // Urutkan List Unik berdasarkan urgensinya (dari yang paling butuh bantuan)
+  const sortedByUrgency = listKuotaUnik.sort(
     (a, b) => a.kuotaTerpenuhi / a.kuotaTotal - b.kuotaTerpenuhi / b.kuotaTotal,
   );
-  const displayedKuota = sortedByUrgency.slice(0, 6);
+
+  // Ambil 6 teratas, ubah ke angka lebih besar misal 9 kalau datamu nanti udah ratusan
+  const displayedKuota = sortedByUrgency.slice(0, 9);
 
   return (
     <div className="space-y-24">
@@ -49,7 +72,7 @@ export default async function HomePage() {
             donasimu ke masjid yang <b>benar-benar membutuhkan</b> melalui UMKM lokal.
           </p>
 
-          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href="#daftar-masjid"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-emerald-600 px-8 py-4 rounded-2xl font-bold hover:bg-emerald-50 hover:scale-105 transition-all shadow-xl shadow-emerald-900/20"
@@ -78,32 +101,34 @@ export default async function HomePage() {
         </div>
 
         <div className="grid sm:grid-cols-3 gap-8 px-4">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center space-y-4 hover:-translate-y-1 transition-transform">
-            <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto rotate-3">
-              <ShieldCheck size={28} />
+          <div className="bg-white p-8 rounded-3xl shadow-sm border-b-4 border-b-emerald-500 border-x border-t border-gray-100 text-center space-y-4 hover:-translate-y-2 transition-transform duration-300">
+            <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto rotate-3">
+              <ShieldCheck size={32} />
             </div>
             <h3 className="font-bold text-xl text-gray-900">Tepat Sasaran</h3>
-            <p className="text-gray-500 leading-relaxed">
-              Sistem membatasi donasi jika kuota suatu masjid sudah penuh, dialihkan ke masjid lain.
+            <p className="text-gray-500 leading-relaxed text-sm">
+              Sistem membatasi donasi jika kuota suatu masjid sudah penuh, dialihkan otomatis ke
+              masjid lain yang lebih membutuhkan.
             </p>
           </div>
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center space-y-4 hover:-translate-y-1 transition-transform">
-            <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto -rotate-3">
-              <UtensilsCrossed size={28} />
+          <div className="bg-white p-8 rounded-3xl shadow-sm border-b-4 border-b-blue-500 border-x border-t border-gray-100 text-center space-y-4 hover:-translate-y-2 transition-transform duration-300">
+            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto -rotate-3">
+              <UtensilsCrossed size={32} />
             </div>
             <h3 className="font-bold text-xl text-gray-900">Bantu UMKM Lokal</h3>
-            <p className="text-gray-500 leading-relaxed">
-              Pesanan takjil langsung di-order secara otomatis ke dapur UMKM terdekat dari lokasi
-              masjid.
+            <p className="text-gray-500 leading-relaxed text-sm">
+              Pesanan takjil langsung di-order secara otomatis ke dapur UMKM terdekat dengan sistem
+              radius GPS yang pintar.
             </p>
           </div>
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center space-y-4 hover:-translate-y-1 transition-transform">
-            <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto rotate-3">
-              <HeartHandshake size={28} />
+          <div className="bg-white p-8 rounded-3xl shadow-sm border-b-4 border-b-amber-500 border-x border-t border-gray-100 text-center space-y-4 hover:-translate-y-2 transition-transform duration-300">
+            <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto rotate-3">
+              <HeartHandshake size={32} />
             </div>
-            <h3 className="font-bold text-xl text-gray-900">Transparan</h3>
-            <p className="text-gray-500 leading-relaxed">
-              Pantau langsung progres distribusi sedekahmu hingga takjil fisik diantar ke lokasi.
+            <h3 className="font-bold text-xl text-gray-900">100% Transparan</h3>
+            <p className="text-gray-500 leading-relaxed text-sm">
+              Pantau langsung progres distribusi sedekahmu secara real-time hingga fisik takjil
+              diantar dan diterima oleh Masjid.
             </p>
           </div>
         </div>
@@ -111,35 +136,34 @@ export default async function HomePage() {
 
       {/* 🕌 DAFTAR MASJID PRIORITAS */}
       <section id="daftar-masjid" className="scroll-mt-32">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 px-2">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 px-2 line-clamp-1">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
-              Prioritas Hari Ini 🚨
+            <div className="inline-flex items-center gap-2 text-rose-600 bg-rose-50 px-3 py-1 mb-3 rounded-full text-sm font-bold border border-rose-100 uppercase tracking-widest">
+              <TrendingUp size={16} /> Urgent Area
+            </div>
+            <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+              Butuh Bantuan Segera!
             </h2>
-            <p className="text-gray-500 text-lg mt-2 max-w-xl">
-              Daftar masjid yang kekurangan takjil terbanyak. Bantuanmu sangat berarti bagi jamaah
-              mereka.
-            </p>
           </div>
-          <div className="hidden md:flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full font-medium text-sm border border-emerald-100">
+          <div className="hidden md:flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl font-medium text-sm border border-emerald-100 shadow-sm">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
-            Real-time Update
+            Real-time Update dari AI
           </div>
         </div>
 
         {displayedKuota.length === 0 ? (
-          <div className="bg-white p-12 rounded-3xl shadow-sm border border-emerald-100 text-center space-y-4">
+          <div className="bg-white p-12 rounded-[2rem] shadow-sm border border-emerald-100 text-center space-y-4">
             <div className="text-6xl">🙌</div>
             <h3 className="text-2xl font-bold text-emerald-600">Alhamdulillah!</h3>
             <p className="text-gray-500 text-lg">
-              Semua kebutuhan takjil hari ini sudah terpenuhi. Terima kasih dermawan!
+              Semua kebutuhan takjil hari ini sudah terpenuhi. Kamu bisa kembali lagi besok!
             </p>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {displayedKuota.map((kuota) => {
               const persentase = Math.min(
                 100,
@@ -150,67 +174,81 @@ export default async function HomePage() {
                 <Link
                   key={kuota.id}
                   href={`/masjid/${kuota.masjid.id}?kuotaHarianId=${kuota.id}`}
-                  className="group bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl hover:border-emerald-200 hover:-translate-y-1 transition-all duration-300 flex flex-col"
+                  className="group bg-white rounded-3xl shadow-sm hover:shadow-2xl border border-gray-100 hover:border-emerald-500 transition-all duration-300 flex flex-col relative overflow-hidden"
                 >
-                  <div className="p-6 space-y-5">
+                  {/* Efek Garis Kiri ala Material */}
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gray-100 group-hover:bg-emerald-500 transition-colors duration-300"></div>
+
+                  <div className="p-7 pl-8 space-y-6">
                     {/* Header Card */}
                     <div>
-                      <h4 className="font-bold text-xl text-gray-900 line-clamp-1 group-hover:text-emerald-600 transition-colors">
+                      <h4 className="font-extrabold text-2xl text-gray-900 line-clamp-2 group-hover:text-emerald-600 transition-colors leading-tight">
                         {kuota.masjid.nama}
                       </h4>
-                      <div className="flex items-start gap-1.5 text-sm text-gray-500 mt-2">
-                        <MapPin size={16} className="shrink-0 mt-0.5 text-emerald-500" />
-                        <span className="line-clamp-2 leading-snug">{kuota.masjid.alamat}</span>
+                      <div className="flex items-start gap-1.5 text-sm text-gray-500 mt-3 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                        <MapPin size={16} className="shrink-0 mt-0.5 text-red-500" />
+                        <span className="line-clamp-2 leading-relaxed font-medium">
+                          {kuota.masjid.alamat}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Stats Ringkas */}
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1.5 bg-gray-50 text-gray-600 px-3 py-1.5 rounded-lg text-sm font-medium">
-                        <Users size={16} />
-                        {kuota.masjid.kapasitasJamaah}
-                      </div>
-                      <div className="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg text-sm font-medium">
-                        {kuota.jenisRequest || "Takjil Bebas"}
-                      </div>
-                    </div>
-
-                    {/* Progress Bar Container */}
-                    <div className="bg-gray-50 p-4 rounded-2xl space-y-3">
-                      <div className="flex justify-between items-end">
-                        <div className="space-y-1">
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Terkumpul
-                          </p>
-                          <p className="text-xl font-bold text-emerald-600 leading-none">
-                            {kuota.kuotaTerpenuhi}{" "}
-                            <span className="text-sm font-medium text-gray-400">
-                              / {kuota.kuotaTotal} porsi
-                            </span>
-                          </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1 text-xs text-gray-500 uppercase font-bold tracking-wider">
+                        <span>Porsi Disarankan</span>
+                        <div className="flex items-center gap-1.5 text-emerald-700 font-extrabold text-base bg-emerald-50 px-2 py-1.5 rounded-lg">
+                          {kuota.jenisRequest || "Takjil Bebas"}
                         </div>
+                      </div>
+                      <div className="flex flex-col gap-1 text-xs text-gray-500 uppercase font-bold tracking-wider">
+                        <span>Estimasi Jamaah</span>
+                        <div className="flex items-center gap-1.5 text-blue-700 font-extrabold text-base bg-blue-50 px-2 py-1.5 rounded-lg">
+                          <Users size={16} className="opacity-60" /> {kuota.masjid.kapasitasJamaah}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar Gede (Chunky) */}
+                    <div className="pt-2">
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-sm font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">
+                          Target Porsi
+                        </span>
                         <div className="text-right">
-                          <span className="text-sm font-bold text-gray-900">{persentase}%</span>
+                          <span className="text-2xl font-black text-emerald-600 tracking-tighter">
+                            {kuota.kuotaTerpenuhi}{" "}
+                            <span className="text-base text-gray-400 font-medium">
+                              / {kuota.kuotaTotal}
+                            </span>
+                          </span>
                         </div>
                       </div>
 
-                      {/* Bar Line */}
-                      <div className="h-2.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                      {/* Bar Background Tebel */}
+                      <div className="h-4 w-full bg-gray-100 rounded-full overflow-hidden shadow-inner border border-gray-200">
+                        {/* Fill Progress animatif */}
                         <div
-                          className="h-full bg-emerald-500 rounded-full group-hover:bg-emerald-400 transition-all duration-500 ease-out"
-                          style={{ width: `${persentase}%` }}
-                        ></div>
+                          className="h-full bg-emerald-500 rounded-r-full flex justify-end items-center px-2 group-hover:bg-emerald-400 group-hover:shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all duration-500 relative"
+                          style={{ width: `${persentase}%`, minWidth: "5%" }}
+                        >
+                          {/* Garis Kilap Animatif didalam progress */}
+                          <div className="absolute inset-0 bg-white/20 skew-x-12 translate-x-[-150%] group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                        </div>
                       </div>
+                      <p className="text-xs text-right mt-1.5 text-gray-400 font-medium">
+                        Sedikit lagi terpenuhi ({persentase}%)
+                      </p>
                     </div>
                   </div>
 
-                  {/* Faux Button (Biar bisa diklik satu card full) */}
-                  <div className="bg-gray-50/80 px-6 py-4 border-t border-gray-100 flex items-center justify-between text-emerald-600 font-semibold group-hover:bg-emerald-600 group-hover:text-white transition-colors mt-auto">
-                    <span>Donasi Sekarang</span>
-                    <ArrowRight
-                      size={18}
-                      className="group-hover:translate-x-1 transition-transform"
-                    />
+                  {/* Tombol Interaktif Unik */}
+                  <div className="bg-emerald-50 px-8 py-5 flex items-center justify-between mt-auto border-t-2 border-dashed border-emerald-100 group-hover:bg-emerald-600 group-hover:border-emerald-600 transition-colors">
+                    <span className="font-extrabold text-emerald-700 tracking-wide group-hover:text-white transition-colors">
+                      SEDEKAH SEKARANG
+                    </span>
+                    <div className="w-10 h-10 bg-white rounded-full flex justify-center items-center shadow-sm text-emerald-600 group-hover:scale-110 transition-transform">
+                      <ArrowRight size={20} strokeWidth={3} />
+                    </div>
                   </div>
                 </Link>
               );
@@ -218,6 +256,17 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+
+      {/* Tambahan animasi CSS keyframe lokal */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @keyframes shimmer {
+          100% { transform: translateX(150%); }
+        }
+      `,
+        }}
+      />
     </div>
   );
 }

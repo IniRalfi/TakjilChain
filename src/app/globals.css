@@ -27,4 +27,9 @@
   .glass {
     @apply bg-white/70 backdrop-blur-md border border-white/20;
   }
+
+  html {
+    -ms-overflow-style: none; /* IE dan Edge */
+    scrollbar-width: none; /* Firefox */
+  }
 }
