@@ -1,0 +1,58 @@
+export const umkmData = [
+  {
+    user: { name: "Ibu Fatimah", email: "dapurfatimah@takjilchain.id", phone: "08123456001" },
+    profil: {
+      nama: "Ibu Fatimah",
+      namaUsaha: "Dapur Bu Fatimah",
+      alamat: "Jl. Veteran No. 12, Pontianak Selatan",
+      kecamatan: "Pontianak Selatan",
+      koordinatLat: -0.0301,
+      koordinatLng: 109.3251,
+      kapasitasHarian: 150,
+      sisaKapasitas: 150,
+      hargaPerPorsi: 15000,
+    },
+  },
+  {
+    user: { name: "Pak Arifin", email: "kateringapollo@takjilchain.id", phone: "08123456002" },
+    profil: {
+      nama: "Pak Arifin",
+      namaUsaha: "Katering Apollo",
+      alamat: "Jl. Gajahmada No. 45, Pontianak Kota",
+      kecamatan: "Pontianak Kota",
+      koordinatLat: -0.0198,
+      koordinatLng: 109.3395,
+      kapasitasHarian: 200,
+      sisaKapasitas: 200,
+      hargaPerPorsi: 15000,
+    },
+  },
+  {
+    user: { name: "Ibu Nuraini", email: "dapurnuraini@takjilchain.id", phone: "08123456003" },
+    profil: {
+      nama: "Ibu Nuraini",
+      namaUsaha: "Dapur Bu Nuraini",
+      alamat: "Jl. Sungai Raya Dalam No. 7, Pontianak Tenggara",
+      kecamatan: "Pontianak Tenggara",
+      koordinatLat: -0.0541,
+      koordinatLng: 109.3298,
+      kapasitasHarian: 100,
+      sisaKapasitas: 100,
+      hargaPerPorsi: 14000,
+    },
+  },
+  {
+    user: { name: "Pak Supriadi", email: "kateringbarokah@takjilchain.id", phone: "08123456004" },
+    profil: {
+      nama: "Pak Supriadi",
+      namaUsaha: "Katering Barokah",
+      alamat: "Jl. Tanjungpura No. 88, Pontianak Kota",
+      kecamatan: "Pontianak Kota",
+      koordinatLat: -0.0165,
+      koordinatLng: 109.3358,
+      kapasitasHarian: 250,
+      sisaKapasitas: 250,
+      hargaPerPorsi: 16000,
+    },
+  },
+];
