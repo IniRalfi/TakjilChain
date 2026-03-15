@@ -31,5 +31,6 @@
   html {
     -ms-overflow-style: none; /* IE dan Edge */
     scrollbar-width: none; /* Firefox */
+    scroll-behavior: smooth;
   }
 }

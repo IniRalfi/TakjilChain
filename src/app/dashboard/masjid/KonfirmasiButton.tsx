@@ -34,10 +34,14 @@ export default function KonfirmasiButton({
     <button
       onClick={handleKonfirmasi}
       disabled={loading}
-      className="bg-emerald-main text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-emerald-light transition flex items-center gap-2 shadow-sm disabled:opacity-70"
+      className="w-full text-center py-3 bg-stone-900 text-white hover:bg-amber-500 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all duration-300 shadow-sm shadow-stone-900/10 disabled:opacity-50 disabled:cursor-not-allowed group border border-stone-800 hover:border-amber-400"
     >
-      {loading ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-      Konfirmasi Terima
+      {loading ? (
+        <Loader2 size={14} className="animate-spin" />
+      ) : (
+        <Check size={14} className="group-hover:scale-125 transition-transform" />
+      )}
+      Terima Takjil
     </button>
   );
 }

@@ -32,15 +32,15 @@ export default function UmkmDashboardClient({
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 mt-6 pb-20">
       {/* 🏛️ SOFT SELECTOR (Background adem) */}
-      <div className="flex items-center gap-3 p-1.5 bg-stone-100/80 backdrop-blur-md rounded-2xl w-fit border border-stone-200/50 max-w-full overflow-x-auto no-scrollbar">
+      <div className="flex flex-wrap items-center gap-3 p-2 bg-stone-100/80 backdrop-blur-md rounded-2xl w-full border border-stone-200/50">
         {allUmkms.map((u) => (
           <button
             key={u.id}
             onClick={() => setActiveUmkm(u)}
-            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap flex items-center gap-2 ${
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 flex-grow sm:flex-grow-0 justify-center ${
               activeUmkm.id === u.id
                 ? "bg-amber-500 text-white shadow-md shadow-amber-200"
-                : "text-stone-500 hover:text-amber-600"
+                : "text-stone-500 hover:text-amber-600 bg-white sm:bg-transparent border border-stone-200 sm:border-transparent"
             }`}
           >
             <Store size={16} className={activeUmkm.id === u.id ? "opacity-100" : "opacity-40"} />

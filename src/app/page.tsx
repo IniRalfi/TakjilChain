@@ -7,31 +7,28 @@ import MasjidListSection from "@/components/MasjidListSection";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  // Ambil semua kuota OPEN dan urutkan dari tanggal terdekat
   const listSemuaKuota = await prisma.kuotaHarian.findMany({
     where: { status: StatusKuota.OPEN },
     include: { masjid: true },
+    orderBy: { tanggal: "asc" },
   });
 
-  // Hapus Duplikat Masjid (Jika 1 masjid punya open kuota untuk 5 hari kedepan, tampilkan 1 saja dari hari terdekat/paling darurat)
+  // Hapus Duplikat Masjid (Ambil hanya 1 hari terdekat per masjid)
   const mapUnik = new Map();
   for (const kuota of listSemuaKuota) {
     if (!mapUnik.has(kuota.masjidProfileId)) {
       mapUnik.set(kuota.masjidProfileId, kuota);
-    } else {
-      // Jika sudah ada, pilih mana yang paling sedikit terpenuhi (urutannya lebih kritis)
-      const existing = mapUnik.get(kuota.masjidProfileId);
-      const rasioBaru = kuota.kuotaTerpenuhi / kuota.kuotaTotal;
-      const rasioLama = existing.kuotaTerpenuhi / existing.kuotaTotal;
-      if (rasioBaru < rasioLama) {
-        mapUnik.set(kuota.masjidProfileId, kuota);
-      }
     }
+    // Jika sudah ada, abaikan, karena kita sudah urutkan by tanggal asc
+    // jadi yang pertama masuk map pasti yang paling dekat harinya.
   }
 
   // Ubah Map kembali ke array
   const listKuotaUnik = Array.from(mapUnik.values());
 
-  // Urutkan List Unik berdasarkan urgensinya (dari yang paling butuh bantuan)
+  // Urutkan List Unik berdasarkan urgensinya (dari yang paling butuh bantuan / rasio terkecil)
+  // Untuk di homepage, kita bisa sort by terpenuhi (paling kritis di atas)
   const sortedByUrgency = listKuotaUnik.sort(
     (a, b) => a.kuotaTerpenuhi / a.kuotaTotal - b.kuotaTerpenuhi / b.kuotaTotal,
   );

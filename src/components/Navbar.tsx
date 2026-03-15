@@ -35,19 +35,27 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-8">
             <Link
               href="/"
+              onClick={(e) => {
+                if (pathname === "/") {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
               className={`text-sm font-semibold transition-colors ${
                 pathname === "/" ? "text-emerald-600" : "text-gray-600 hover:text-emerald-500"
               }`}
             >
               Beranda
             </Link>
-            <Link
+            {/* 🛠️ FIX BUG NAVIGASI: Ubah Link jadi <a> tag biar native browser ke #daftar-masjid */}
+            <a
               href="/#daftar-masjid"
               className="text-sm font-semibold text-gray-600 hover:text-emerald-500 transition-colors"
             >
               Daftar Masjid
-            </Link>
+            </a>
             <div className="h-4 w-px bg-gray-300"></div>
+            {/* 🛠️ FIX COPYWRITING: "Akses Pengurus" diubah jadi "Dasbor Masjid" */}
             <Link
               href="/dashboard/masjid"
               className={`text-sm font-semibold px-4 py-2 rounded-full transition border ${
@@ -56,8 +64,9 @@ export default function Navbar() {
                   : "text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-emerald-600"
               }`}
             >
-              Akses Pengurus
+              Dasbor Masjid
             </Link>
+            {/* 🛠️ FIX COPYWRITING: "Akses UMKM" diubah jadi "Dasbor UMKM" */}
             <Link
               href="/dashboard/umkm"
               className={`text-sm font-semibold px-4 py-2 rounded-full transition border ${
@@ -66,7 +75,7 @@ export default function Navbar() {
                   : "text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-emerald-600"
               }`}
             >
-              Akses UMKM
+              Dasbor UMKM
             </Link>
           </div>
 
@@ -83,25 +92,31 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Nav Dropdown */}
-      {/* Mobile Nav Dropdown */}
       {isOpen && (
         <div className="md:hidden bg-white border-b border-gray-100 px-4 pt-2 pb-6 flex flex-col gap-4 shadow-lg absolute w-full left-0">
           <Link
             href="/"
-            onClick={() => setIsOpen(false)}
+            onClick={(e) => {
+              if (pathname === "/") {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+              setIsOpen(false);
+            }}
             className={`text-base font-semibold py-2 ${
               pathname === "/" ? "text-emerald-600" : "text-gray-700"
             }`}
           >
             Beranda
           </Link>
-          <Link
+          {/* Untuk Mobile Juga Diubah */}
+          <a
             href="/#daftar-masjid"
             onClick={() => setIsOpen(false)}
             className="text-base font-semibold text-gray-700 py-2"
           >
             Daftar Masjid
-          </Link>
+          </a>
           <hr className="border-gray-100" />
           <Link
             href="/dashboard/masjid"
@@ -112,7 +127,7 @@ export default function Navbar() {
                 : "text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-emerald-600"
             }`}
           >
-            Portal Pengurus Masjid
+            Dasbor Masjid
           </Link>
           <Link
             href="/dashboard/umkm"
@@ -123,7 +138,7 @@ export default function Navbar() {
                 : "text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-emerald-600"
             }`}
           >
-            Portal Mitra UMKM
+            Dasbor UMKM
           </Link>
         </div>
       )}
