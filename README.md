@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
+  <img src="src/assets/logo.png" alt="TakjilChain Logo" width="200" />
+  <h1>🌙 TakjilChain — AI-Driven Takjil Distribution Platform</h1>
+</div>
 
-## Getting Started
+**TakjilChain** adalah platform inovatif berbasis AI yang menghubungkan Donatur, Masjid, dan UMKM Kuliner untuk mendistribusikan sedekah takjil secara efisien, transparan, dan tepat sasaran. Dibangun untuk mempermudah ekosistem berbagi di bulan Ramadhan dengan sentuhan teknologi mutakhir.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Fitur Unggulan (Agentic System)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Platform ini menggunakan sistem **Multi-Agent AI** untuk menjalankan operasional secara otomatis:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **🤖 Forecasting Agent**: Memberikan saran kuota takjil harian kepada pengurus masjid berdasarkan data historis, kapasitas masjid, dan tipe hari (Jumat/Lailatul Qadar).
+- **🤖 Logistics Agent**: Melakukan _auto-rerouting_ pesanan. Jika UMKM tidak merespon dalam 30 menit, AI akan otomatis memindahkan pesanan ke UMKM terdekat berikutnya.
+- **🤖 Reporting Agent**: Menghasilkan narasi laporan personal yang menyentuh hati bagi donatur menggunakan AI, merangkum dampak nyata dari sedekah mereka.
+- **🛡️ AI Failover System**: Sistem "otak cadangan" bertingkat (Gemini → OpenRouter → Groq) untuk memastikan fitur AI tetap aktif 24/7.
+- **📍 Smart Routing**: Algoritma pencarian UMKM terdekat berbasis koordinat GPS (Haversine Formula) untuk memastikan kesegaran takjil dan efisiensi pengantaran.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🛠️ Stack Teknologi
 
-To learn more about Next.js, take a look at the following resources:
+- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
+- **Runtime**: [Bun](https://bun.sh/)
+- **Language**: TypeScript
+- **Database ORM**: [Prisma](https://www.prisma.io/)
+- **Database**: PostgreSQL (Hosted on Supabase)
+- **Styling**: Tailwind CSS & Framer Motion
+- **AI Engines**: Google Gemini (Primary), Claude via OpenRouter, Llama 3 via Groq
+- **Payment Gateway**: [Mayar.id](https://mayar.id/) (Integrated with HMAC Signature Verification)
+- **Icons**: Lucide React
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📦 Instalasi & Persiapan
 
-## Deploy on Vercel
+1. **Clone Repository**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   git clone https://github.com/IniRalfi/TakjilChain.git
+   cd takjilchain
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Instal Dependensi**
+
+   ```bash
+   bun install
+   ```
+
+3. **Konfigurasi Environment**
+   Buat file `.env` di root direktori dan isi variabel berikut:
+
+   ```env
+   DATABASE_URL="your_postgresql_url"
+
+   # AI SECTIONS
+   GEMINI_API_KEY="your_gemini_key"
+   OPENROUTER_API_KEY="your_openrouter_key"
+   GROQ_API_KEY="your_groq_key"
+
+   # PAYMENT SECTION
+   MAYAR_API_KEY="your_mayar_key"
+   MAYAR_WEBHOOK_SECRET="your_webhook_secret"
+
+   NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+   ```
+
+4. **Setup Database**
+
+   ```bash
+   bunx prisma generate
+   bunx prisma db push
+   ```
+
+5. **Jalankan Aplikasi**
+   ```bash
+   bun dev
+   ```
+
+---
+
+## 🏗️ Arsitektur Data
+
+Aplikasi ini memiliki 3 entitas utama:
+
+- **Donatur**: Memilih masjid dan jumlah porsi yang ingin disedekahkan.
+- **Masjid**: Mengelola kuota harian dan menerima kiriman takjil.
+- **UMKM**: Menerima pesanan, memproduksi takjil, dan melakukan pengantaran.
+
+Pencairan dana ke saldo UMKM dilakukan secara otomatis segera setelah pengurus masjid melakukan konfirmasi penerimaan di aplikasi.
+
+---
+
+## 🔐 Keamanan & Reliabilitas
+
+- **Webhook Security**: Menggunakan verifikasi signature HMAC SHA256 untuk setiap notifikasi pembayaran dari Mayar.
+- **Safe Prisma Wrapper**: Implementasi _retry mechanism_ untuk menangani kegagalan koneksi database (Cold Start) secara elegan.
+- **Custom Toast System**: Sistem notifikasi kustom yang responsif untuk pengalaman pengguna yang lebih _premium_.
+
+---
+
+## 📝 Lisensi
+
+Proyek ini dibangun untuk tujuan kompetisi dan pengembangan ekosistem kebaikan digital.
+
+---
+
+_Dibuat dengan ❤️ untuk menebar kebaikan di bulan suci._
