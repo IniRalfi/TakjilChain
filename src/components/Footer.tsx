@@ -88,7 +88,7 @@ export default function Footer() {
 
         <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-gray-200 text-sm text-gray-400">
           <p>© {new Date().getFullYear()} TakjilChain. All rights reserved.</p>
-          <p className="mt-2 md:mt-0">Dibuat dengan 💚 di Pontianak</p>
+          <p className="mt-2 md:mt-0">Dibuat dengan 💚 oleh @iniralfi [rafli] di Pontianak</p>
         </div>
       </div>
     </footer>
