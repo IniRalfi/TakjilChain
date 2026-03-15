@@ -94,30 +94,30 @@ Buka `prisma/schema.prisma`. Definisikan model berikut:
 
 ### 2.1 — Smart Routing Algorithm
 
-- [ ] Buat fungsi `findNearestUMKM(masjidId, jumlahPorsi)` di `src/lib/routing.ts`.
+- [x] Buat fungsi `findNearestUMKM(masjidId, jumlahPorsi)` di `src/lib/routing.ts`.
   - Ambil koordinat Masjid dari DB.
   - Ambil semua UMKM yang `sisaKapasitas >= jumlahPorsi`.
   - Hitung jarak menggunakan **Haversine Formula**.
   - Return UMKM dengan jarak terpendek & sisa kapasitas terbanyak.
-- [ ] Buat fungsi `createPesanan(kuotaHarianId, umkmId, jumlahPorsi)` di `src/lib/orders.ts`.
+- [x] Buat fungsi `createPesanan(kuotaHarianId, umkmId, jumlahPorsi)` di `src/lib/orders.ts`.
   - Kurangi `sisaKapasitas` UMKM secara atomik (gunakan Prisma `$transaction`).
   - Update `kuotaTerpenuhi` di model `KuotaHarian`.
   - Ubah status `KuotaHarian` → `FULL` jika `kuotaTerpenuhi >= kuotaTotal`.
 
 ### 2.2 — Integrasi Mayar API
 
-- [ ] Buat `src/app/api/checkout/route.ts`.
+- [x] Buat `src/app/api/checkout/route.ts`.
   - **Input:** `kuotaHarianId`, `jumlahPorsi`, `donaturData`.
   - **Proses:** Hitung total harga, buat record `Donasi` status `PENDING`, panggil Mayar API generate _Payment Link_.
   - **Output:** Return URL _Payment Link_ Mayar untuk redirect di frontend.
-- [ ] Buat `src/app/api/webhook/mayar/route.ts`.
+- [x] Buat `src/app/api/webhook/mayar/route.ts`.
   - Verifikasi signature HMAC dari Mayar untuk keamanan.
   - Jika event `PAYMENT_PAID`: update `Donasi` → `PAID`, trigger `createPesanan`.
   - Jika event `PAYMENT_FAILED`: update `Donasi` → `FAILED`.
 
 ### 2.3 — Confirmation System (Masjid)
 
-- [ ] Buat Server Action `konfirmasiTerima(pesananId)` di `src/lib/actions/masjid.ts`.
+- [x] Buat Server Action `konfirmasiTerima(pesananId)` di `src/lib/actions/masjid.ts`.
   - Update status `Pesanan` → `CONFIRMED`.
   - Tambah jumlah dana ke field `saldo` UMKM secara atomik.
   - Trigger Narrative Reporting Agent (Phase 3.2).
@@ -136,11 +136,11 @@ bun add @google/generative-ai
 
 ### 3.1 — Logistics Agent (Auto Re-Route)
 
-- [ ] Buat `src/lib/agents/logisticsAgent.ts`.
+- [x] Buat `src/lib/agents/logisticsAgent.ts`.
   - Dijalankan sebagai **Vercel Cron Job** setiap 5 menit (konfigurasi di `vercel.json`).
   - Logic: Cari semua `Pesanan` dengan status `WAITING` yang `createdAt`-nya sudah > 30 menit.
   - Untuk setiap pesanan tersebut: panggil `findNearestUMKM` (exclude UMKM yang sudah `REJECTED`), buat `Pesanan` baru ke UMKM berikutnya, tandai pesanan lama → `REJECTED`.
-- [ ] Tambahkan konfigurasi cron di `vercel.json`:
+- [x] Tambahkan konfigurasi cron di `vercel.json`:
   ```json
   {
     "crons": [{ "path": "/api/agents/logistics", "schedule": "*/5 * * * *" }]
@@ -149,7 +149,7 @@ bun add @google/generative-ai
 
 ### 3.2 — Narrative Reporting Agent
 
-- [ ] Buat `src/lib/agents/reportingAgent.ts`.
+- [x] Buat `src/lib/agents/reportingAgent.ts`.
   - **Input:** Data `Pesanan` yang baru `CONFIRMED` (nama masjid, nama UMKM, jenis takjil, jumlah porsi, waktu antar).
   - **Proses:** Kirim data ke Gemini API dengan prompt yang terstruktur untuk menghasilkan narasi emosional dalam Bahasa Indonesia.
   - **Output:** Simpan narasi ke field `narasiAI` di tabel `Pesanan` + tampilkan di halaman donatur.
@@ -158,7 +158,7 @@ bun add @google/generative-ai
 
 ### 3.3 — Demand Forecasting Agent
 
-- [ ] Buat `src/lib/agents/forecastingAgent.ts`.
+- [x] Buat `src/lib/agents/forecastingAgent.ts`.
   - Analisa historis `KuotaHarian` (pola hari Jumat, malam ke-21, ke-27 Ramadhan, dll.).
   - Kirim data ke Gemini untuk generate rekomendasi peningkatan kuota.
   - Tampilkan sebagai _Insight Card_ di Dashboard Pengurus Masjid.

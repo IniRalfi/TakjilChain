@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { StatusPesanan } from "@/generated/prisma/client";
+import { generateNarasiAI } from "@/lib/agents/reportingAgent";
 
 /**
  * Server Action: Masjid mengkonfirmasi bahwa takjil sudah diterima.
@@ -65,8 +66,8 @@ export async function konfirmasiTerima(pesananId: string, pengurusId: string) {
         `→ saldo ${pesanan.umkm.namaUsaha}`,
     );
 
-    // TODO Phase 3: Trigger AI Narrative Reporting di sini
-    // await generateNarasiAI(pesanan.id);
+    // AI Narrative Reporting Agent dipanggil (asynchronous agar request tidak tertahan)
+    generateNarasiAI(pesanan.id).catch((err) => console.error("Agent Reporting Error:", err));
 
     return { success: true, pesananId };
   } catch (error) {
