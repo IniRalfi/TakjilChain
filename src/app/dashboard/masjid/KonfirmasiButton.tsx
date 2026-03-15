@@ -4,6 +4,7 @@ import { useState } from "react";
 import { konfirmasiTerima } from "@/lib/actions/masjid";
 import { Check, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ToastProvider";
 
 export default function KonfirmasiButton({
   pesananId,
@@ -14,18 +15,17 @@ export default function KonfirmasiButton({
 }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleKonfirmasi = async () => {
     setLoading(true);
     const result = await konfirmasiTerima(pesananId, pengurusId);
 
     if (result.success) {
-      alert(
-        "✅ Takjil berhasil dikonfirmasi tiba. UMKM dibayar, dan AI sedang menulis laporan untuk donatur.",
-      );
+      toast("Takjil terkonfirmasi! AI sedang menulis laporan.", "success");
       router.refresh(); // Refresh halaman agar status badge berubah
     } else {
-      alert("❌ Gagal: " + result.error);
+      toast("Gagal: " + result.error, "error");
       setLoading(false);
     }
   };

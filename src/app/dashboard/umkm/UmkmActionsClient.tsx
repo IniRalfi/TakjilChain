@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { terimaPesanan, tandaiSelesaiDiantar } from "@/lib/actions/umkm";
 import { Loader2 } from "lucide-react";
 
+import { useToast } from "@/components/ToastProvider";
+
 export default function UmkmActionsClient({
   pesananId,
   umkmId,
@@ -16,14 +18,16 @@ export default function UmkmActionsClient({
 }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleTerima = async () => {
     setLoading(true);
     const res = await terimaPesanan(pesananId, umkmId);
     if (res.success) {
+      toast("Order diterima! Selamat memasak.", "success");
       router.refresh();
     } else {
-      alert("Gagal: " + res.error);
+      toast("Gagal: " + res.error, "error");
       setLoading(false);
     }
   };
@@ -32,10 +36,10 @@ export default function UmkmActionsClient({
     setLoading(true);
     const res = await tandaiSelesaiDiantar(pesananId, umkmId);
     if (res.success) {
-      alert("✅ Status diubah. Menunggu Takmir mengonfirmasi penerimaan.");
+      toast("Status diperbarui. Menunggu konfirmasi Masjid.", "success");
       router.refresh();
     } else {
-      alert("Gagal: " + res.error);
+      toast("Gagal: " + res.error, "error");
       setLoading(false);
     }
   };

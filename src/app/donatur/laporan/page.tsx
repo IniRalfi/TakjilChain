@@ -163,14 +163,22 @@ export default async function LaporanDampakPage() {
 
                     {/* Content Center */}
                     <div className="flex-1 space-y-6">
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-4">
                         <span className="text-[10px] font-black text-stone-300 uppercase tracking-[0.2em]">
-                          Transaction ID: #{d.id.slice(-8).toUpperCase()}
+                          ID: #{d.id.slice(-8).toUpperCase()}
                         </span>
+                        {d.narasiAI && (
+                          <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-50 rounded-lg border border-amber-100 shadow-sm animate-pulse">
+                            <Sparkles size={12} className="text-amber-500" />
+                            <span className="text-[9px] font-black text-amber-700 uppercase tracking-widest italic">
+                              AI Report Ready
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-2">
-                        <h4 className="text-3xl font-black text-stone-900 group-hover:text-amber-600 transition-colors italic tracking-tighter">
+                        <h4 className="text-3xl font-black text-stone-900 group-hover:text-amber-600 transition-colors italic tracking-tighter leading-tight">
                           {d.kuotaHarian.masjid.nama}
                         </h4>
                         <div className="flex items-center gap-2 text-stone-400 text-sm font-medium italic">
@@ -179,12 +187,12 @@ export default async function LaporanDampakPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-8 pt-6 border-t border-stone-50">
+                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t border-stone-50">
                         <div className="space-y-1">
                           <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest italic">
                             Jumlah
                           </p>
-                          <p className="text-2xl font-black text-stone-900 italic tracking-tighter">
+                          <p className="text-xl font-black text-stone-900 italic tracking-tighter">
                             {d.jumlahPorsi} <span className="text-xs uppercase">Porsi</span>
                           </p>
                         </div>
@@ -192,56 +200,35 @@ export default async function LaporanDampakPage() {
                           <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest italic">
                             Kontribusi
                           </p>
-                          <p className="text-2xl font-black text-stone-900 italic tracking-tighter">
+                          <p className="text-xl font-black text-stone-900 italic tracking-tighter">
                             Rp {d.totalHarga.toLocaleString("id-ID")}
                           </p>
                         </div>
                         {d.pesanan && (
-                          <div className="space-y-1 col-span-2 md:col-span-1">
+                          <div className="space-y-1 col-span-2 lg:col-span-1">
                             <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest italic">
                               Mitra Produksi
                             </p>
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
-                                <ChefHat size={12} className="text-white" />
-                              </div>
-                              <p className="text-lg font-black text-stone-900 italic tracking-tighter">
-                                {d.pesanan.umkm.namaUsaha}
-                              </p>
-                            </div>
+                            <p className="text-lg font-black text-stone-900 italic tracking-tighter truncate">
+                              {d.pesanan.umkm.namaUsaha}
+                            </p>
                           </div>
                         )}
                       </div>
-                    </div>
 
-                    {/* Action Right */}
-                    <div className="flex flex-col gap-4 justify-center md:min-w-[220px]">
-                      <Link
-                        href={`/donasi/${d.id}`}
-                        className="flex items-center justify-center gap-3 w-full py-5 bg-stone-900 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-amber-500 transition-all shadow-xl shadow-stone-200 group/btn"
-                      >
-                        Buka Live Tracker{" "}
-                        <ChevronRight
-                          size={16}
-                          className="group-hover/btn:translate-x-1 transition-transform"
-                        />
-                      </Link>
-
-                      {d.narasiAI ? (
-                        <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-[2rem] border border-amber-100/50 relative overflow-hidden flex items-start gap-3">
-                          <Sparkles size={18} className="text-amber-500 shrink-0 mt-1" />
-                          <p className="text-xs text-stone-600 font-bold leading-relaxed italic">
-                            "AI telah merangkum dampak nyata dari donasi ini khusus untuk Anda."
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="p-6 bg-stone-50 rounded-[2rem] border border-stone-100 flex items-center gap-3">
-                          <Clock size={16} className="text-stone-300" />
-                          <p className="text-[10px] text-stone-400 font-black uppercase tracking-widest">
-                            Laporan Sedang Diproses
-                          </p>
-                        </div>
-                      )}
+                      {/* Action Button */}
+                      <div className="pt-4">
+                        <Link
+                          href={`/donasi/${d.id}`}
+                          className="inline-flex items-center justify-center gap-3 w-full md:w-auto px-10 py-4 bg-stone-900 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-amber-500 transition-all shadow-xl shadow-stone-200 group/btn"
+                        >
+                          Buka Live Tracker{" "}
+                          <ChevronRight
+                            size={16}
+                            className="group-hover/btn:translate-x-1 transition-transform"
+                          />
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
