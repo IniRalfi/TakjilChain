@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { StatusDonasi } from "@/generated/prisma/client";
-
-// ─── POST /api/checkout ───────────────────────────────────────
-// Menerima request donasi, membuat record Donasi PENDING,
-// dan mengembalikan Payment Link dari Mayar API.
+import { prosesDonasiPaid } from "@/lib/orders";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,17 +16,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Ambil data kuota & validasi masih OPEN ---
     const kuota = await prisma.kuotaHarian.findUnique({
       where: { id: kuotaHarianId },
       include: { masjid: true },
     });
 
-    if (!kuota) {
-      return NextResponse.json({ error: "Kuota tidak ditemukan." }, { status: 404 });
-    }
-    if (kuota.status !== "OPEN") {
-      return NextResponse.json({ error: "Kuota sudah penuh atau ditutup." }, { status: 409 });
+    if (!kuota || kuota.status !== "OPEN") {
+      return NextResponse.json({ error: "Kuota tidak valid atau sudah penuh." }, { status: 400 });
     }
 
     const sisaKuota = kuota.kuotaTotal - kuota.kuotaTerpenuhi;
@@ -39,59 +32,31 @@ export async function POST(req: NextRequest) {
 
     const totalHarga = jumlahPorsi * kuota.hargaPerPorsi;
 
-    // --- Buat record Donasi PENDING ---
+    // --- 1. Buat record Donasi ---
+    // Karena MODE BYPASS (Demo), kita langsung anggap PAID agar flow langsung berlanjut
     const donasi = await prisma.donasi.create({
       data: {
         donaturId,
         kuotaHarianId,
         jumlahPorsi,
         totalHarga,
-        status: StatusDonasi.PENDING,
+        status: StatusDonasi.PAID, // Langsung PAID
+        mayarPaymentId: "mock-" + Date.now(),
+        mayarPaymentUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/donasi/mock`,
       },
     });
 
-    // --- Generate Payment Link via Mayar API ---
-    const mayarResponse = await fetch("https://mayar.id/api/v1/payment-link", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.MAYAR_API_KEY}`,
-      },
-      body: JSON.stringify({
-        name: `Donasi Takjil - ${kuota.masjid.nama}`,
-        amount: totalHarga,
-        currency: "IDR",
-        description:
-          `Donasi ${jumlahPorsi} porsi takjil untuk ${kuota.masjid.nama} ` +
-          `pada ${new Date(kuota.tanggal).toLocaleDateString("id-ID")}`,
-        redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/donasi/${donasi.id}`,
-        metadata: {
-          donasiId: donasi.id,
-          kuotaHarianId,
-          donaturId,
-        },
-      }),
-    });
-
-    if (!mayarResponse.ok) {
-      // Rollback: hapus donasi jika Mayar gagal
-      await prisma.donasi.delete({ where: { id: donasi.id } });
-      const errData = await mayarResponse.json();
-      console.error("[MAYAR] Gagal buat payment link:", errData);
-      return NextResponse.json({ error: "Gagal membuat link pembayaran." }, { status: 502 });
+    // --- 2. BYPASS: Langsung trigger alur pencarian UMKM (asumsikan Webhook Mayar sukses)
+    try {
+      await prosesDonasiPaid(donasi.id);
+      console.log(`[MOCK BYPASS] Pesanan dari donasi ${donasi.id} berhasil di-route ke UMKM`);
+    } catch (routeError) {
+      console.error("[MOCK BYPASS] Gagal routing pesanan:", routeError);
     }
 
-    const mayarData = await mayarResponse.json();
-    const paymentUrl: string = mayarData.data?.paymentUrl ?? mayarData.paymentUrl;
-
-    // --- Simpan Payment ID & URL dari Mayar ---
-    await prisma.donasi.update({
-      where: { id: donasi.id },
-      data: {
-        mayarPaymentId: mayarData.data?.id ?? mayarData.id,
-        mayarPaymentUrl: paymentUrl,
-      },
-    });
+    // --- 3. URL Redirect Dummy ---
+    // Arahkan otomatis si user ke halaman konfirmasi donasi
+    const paymentUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/donasi/${donasi.id}`;
 
     return NextResponse.json({ paymentUrl, donasiId: donasi.id });
   } catch (error) {

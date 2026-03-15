@@ -1,9 +1,11 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { prisma } from "@/lib/prisma";
 import { StatusPesanan } from "@/generated/prisma/client";
 
 // Inisialisasi Google Gemini dengan API Key
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const ai = new GoogleGenAI({
+  apiKey: process.env["GEMINI_API_KEY"],
+});
 
 export async function generateNarasiAI(pesananId: string) {
   try {
@@ -16,9 +18,7 @@ export async function generateNarasiAI(pesananId: string) {
     });
 
     if (!pesanan || pesanan.status !== StatusPesanan.CONFIRMED) {
-      console.warn(
-        `🤖 [Reporting Agent] Pesanan ${pesananId} belum CONFIRMED atau tidak ditemukan.`,
-      );
+      console.warn(`🤖 [Reporting Agent] Pesanan ${pesananId} belum CONFIRMED.`);
       return null;
     }
 
@@ -32,8 +32,8 @@ export async function generateNarasiAI(pesananId: string) {
         })
       : "beberapa saat sebelum waktu berbuka";
 
-    // 1. Buat prompt untuk dikirim ke Gemini
-    const prompt = `
+    // 1. Buat prompt
+    const userPrompt = `
       Anda adalah "Agent Reporter" TakjilChain yang bertugas membuat laporan narasi donasi.
       Tulis satu paragraf singkat (maksimal 3-4 kalimat) yang menyentuh hati dan estetik untuk seorang donatur.
       Laporan ini akan dikirim via WhatsApp atau Email kepada mereka.
@@ -45,23 +45,29 @@ export async function generateNarasiAI(pesananId: string) {
       - Nama Masjid Penerima: ${masjid.nama}
       - Jumlah Porsi Tersalurkan: ${pesanan.jumlahPorsi} porsi
       - UMKM Pembuat Takjil: ${umkm.namaUsaha}
-      - Hari/Tanggal Buka Puasa: ${new Date(pesanan.kuotaHarian.tanggal).toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-      - Jenis Takjil (optional): ${pesanan.kuotaHarian.jenisRequest || "Takjil Menu Berbuka"}
       - Waktu Tiba di Masjid: ${waktuAntarStr} WIB
 
       Buatkan narasinya sekarang!
     `.trim();
 
-    // 2. Panggil API Gemini (Pilih model gemini-1.5-flash untuk hasil teks cepat)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     console.log(`🤖 [Reporting Agent] Menghasilkan narasi untuk Pesanan ${pesananId}...`);
 
-    const result = await model.generateContent(prompt);
-    const narasi = result.response.text().trim();
+    // 2. Panggil API Gemini dengan SDK terbaru (@google/genai)
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      config: {
+        thinkingConfig: {
+          thinkingLevel: ThinkingLevel.HIGH,
+        },
+      },
+      contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+    });
+
+    const narasi = response.text || "Takjil telah sukses dan aman diantar ke tujuan!";
 
     console.log("🤖 [Reporting Agent] Narasi Selesai generated!");
 
-    // 3. Simpan Narasi di tabel Donasi (berhubung satu pesanan bisa meng-fulfill satu donasi spesifik)
+    // 3. Simpan Narasi
     const donasiTerkait = await prisma.donasi.findFirst({
       where: {
         kuotaHarianId: pesanan.kuotaHarianId,
